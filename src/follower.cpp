@@ -4,11 +4,11 @@
 
 namespace FOLLOWING
 {
-    Follower::Follower(ros::NodeHandle nh) : nh_(nh), local_nh_("~"), laserSub_(nh_, "scan", 100), odomSub_(nh_, "odom", 100), targetSub_(nh_, "/mono_following/target", 100)
+    Follower::Follower(ros::NodeHandle nh) : nh_(nh), local_nh_("~"), tf_listener_(tf_buffer_), laserSub_(nh_, "scan", 100), odomSub_(nh_, "odom", 100), targetSub_(nh_, "/mono_following/target", 100)
     {
-        local_nh_.param<double>("DISTANCE", distance_, 1.0);
+        load_params();
         goalPub_ = nh_.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
-        sync_ = std::make_shared<message_filters::Synchronizer<SyncPolicy>>(SyncPolicy, laserSub_, odomSub_, targetSub_);
+        sync_ = std::make_shared<message_filters::Synchronizer<SyncPolicy>>(SyncPolicy(100), laserSub_, odomSub_, targetSub_);
         sync_->registerCallback(std::bind(&Follower::TargetCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
         InitPose();
     }
@@ -41,7 +41,7 @@ namespace FOLLOWING
         obsList_.poses.clear();
         float angle = scan->angle_min;
         const int angle_index_step = static_cast<int>(scan_angle_resolution_ / scan->angle_increment);
-        geometry_msgs::TransformStamped transform = tf_buffer_.lookupTransform("base_link", scan->header.framed_id, ros::Time(0), ros::Duration(0.1));
+        geometry_msgs::TransformStamped transform = tf_buffer_.lookupTransform("base_link", scan->header.frame_id, ros::Time(0), ros::Duration(0.1));
 
         for (int i = 0; i < scan->ranges.size(); i++)
         {
@@ -141,12 +141,12 @@ namespace FOLLOWING
         }
     }
 
-    geometry_msgs::PolygonStamped Follower::MoveFootprint(const geometry_msgs::Pose goalInBase, const spencer_tracking_msgs::TargetPerson targetMsg)
+    geometry_msgs::PolygonStamped Follower::MoveFootprint(const geometry_msgs::Pose &goalInBase, const spencer_tracking_msgs::TargetPerson &targetMsg)
     {
         geometry_msgs::PolygonStamped moved_footprint;
 
-        double dx = goalInBase.position.x - targetMsg.pose.pose.position.x;
-        double dy = goalInBase.position.y - targetMsg.pose.pose.position.y;
+        double dx = targetMsg.pose.pose.position.x - goalInBase.position.x;
+        double dy = targetMsg.pose.pose.position.y - goalInBase.position.y;
         double yaw = std::atan2(dy, dx);
 
         for (auto &point : footprint_.polygon.points)
@@ -164,6 +164,8 @@ namespace FOLLOWING
 
             moved_footprint.polygon.points.push_back(moved_point);
         }
+
+        return moved_footprint;
     }
 
     bool Follower::CheckPointInTriangle(const geometry_msgs::Point &obsPoint, const geometry_msgs::Polygon &triangle)
@@ -226,6 +228,8 @@ namespace FOLLOWING
                 return true;
             }
         }
+
+        return false;
     }
 
     bool Follower::CheckCollision(const geometry_msgs::Pose &goalInBase, const spencer_tracking_msgs::TargetPerson &targetMsg)
@@ -233,7 +237,7 @@ namespace FOLLOWING
         geometry_msgs::PolygonStamped moved_footprint = MoveFootprint(goalInBase, targetMsg);
         for (auto &obs : obsList_.poses)
         {
-            if (CheckPointInRobot(obs.position, moved_footprint))
+            if (CheckPointInRobot(obs.position, moved_footprint, goalInBase))
             {
                 return true;
             }
@@ -252,7 +256,7 @@ namespace FOLLOWING
     }
 
     void
-    Follower::TargetCallback(const sensor_msgs::LaserScan::ConstPtr &laserMsg, const nav_msgs::Odometry::ConstPtr &odomMsg, const spencer_tracking_msgs::TrackedPersons::ConstPtr &targetMsg)
+    Follower::TargetCallback(const sensor_msgs::LaserScan::ConstPtr &laserMsg, const nav_msgs::Odometry::ConstPtr &odomMsg, const spencer_tracking_msgs::TargetPerson::ConstPtr &targetMsg)
     {
         spencer_tracking_msgs::TargetPerson target_msg;
         target_msg = *targetMsg;

@@ -15,6 +15,8 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   visualization_msgs
   spencer_tracking_msgs
+  tf2_ros
+  tf2_geometry_msgs
 )
 
 find_package(Eigen3 REQUIRED COMPONENTS system)
@@ -143,6 +145,7 @@ include_directories(
 add_executable(${PROJECT_NAME}_node
   src/following_controller_node.cpp
   src/follower.cpp
+  src/params.cpp
 )
 
 ## Rename C++ executable without prefix
