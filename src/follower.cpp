@@ -1,6 +1,7 @@
 #include <Eigen/Dense>
 #include <tf/tf.h>
 #include "following_controller/follower.h"
+#include "following_controller/utils.h"
 
 namespace FOLLOWING
 {
@@ -261,6 +262,18 @@ namespace FOLLOWING
         spencer_tracking_msgs::TargetPerson target_msg;
         target_msg = *targetMsg;
 
+        if (FOLLOWING::IsDoubleEqualtoZero(target_msg.pose.pose.position.x))
+        {
+            ROS_WARN_STREAM("No target is tracked!");
+            return;
+        }
+
+        if (target_msg.pose.pose.position.x > 3.5)
+        {
+            ROS_WARN_STREAM("Target is too far away!");
+            return;
+        }
+
         GetTargetInBase(target_msg);
         CreateObsList(laserMsg);
         GenerateGoalSamplesInBase(10);
@@ -287,6 +300,7 @@ namespace FOLLOWING
         }
 
         bestGoalInOdom_.header.stamp = ros::Time::now();
+        bestGoalInOdom_.header.frame_id = "odom";
         bestGoalInOdom_.pose = TransformBestGoalToOdom(odomMsg, bestGoalInBase);
         goalPub_.publish(bestGoalInOdom_);
     }

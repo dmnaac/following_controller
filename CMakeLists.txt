@@ -146,6 +146,7 @@ add_executable(${PROJECT_NAME}_node
   src/following_controller_node.cpp
   src/follower.cpp
   src/params.cpp
+  src/utils.cpp
 )
 
 ## Rename C++ executable without prefix
