@@ -57,4 +57,16 @@ namespace FOLLOWING
         }
         return footprint;
     }
+
+    bool IsKeyTarget(geometry_msgs::Point last_target_pos, geometry_msgs::Point cur_target_pos)
+    {
+        double dx = cur_target_pos.x - last_target_pos.x;
+        double dy = cur_target_pos.y - last_target_pos.y;
+        double dist = std::sqrt(dx * dx + dy * dy);
+        if (dist > 0.5)
+        {
+            return true;
+        }
+        return false;
+    }
 }

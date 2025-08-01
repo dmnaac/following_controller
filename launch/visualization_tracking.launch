@@ -1,5 +1,5 @@
 <launch>
     <param name="use_sim_time" value="false" />
 
-    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find following_controller)/config/visualization_tracking.rviz" />
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find following_controller)/config/visualize_tracking.rviz" />
 </launch>

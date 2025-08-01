@@ -14,6 +14,8 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseArray.h>
 #include <geometry_msgs/PolygonStamped.h>
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 #include <spencer_tracking_msgs/TargetPerson.h>
 
@@ -45,9 +47,11 @@ namespace FOLLOWING
         geometry_msgs::PoseArray obsList_;
         geometry_msgs::PoseStamped bestGoalInOdom_;
 
+        geometry_msgs::Point last_target_pos_;
+
         geometry_msgs::Pose TransformBestGoalToOdom(const nav_msgs::Odometry::ConstPtr &currentOdom, const geometry_msgs::Pose &bestGoalInBase);
         geometry_msgs::PolygonStamped MoveFootprint(const geometry_msgs::Pose &goalInBase, const spencer_tracking_msgs::TargetPerson &targetMsg);
-        void CreateObsList(const sensor_msgs::LaserScan::ConstPtr &scan);
+        void CreateObsList(const sensor_msgs::LaserScan &scan);
         bool CheckPointInTriangle(const geometry_msgs::Point &obsPoint, const geometry_msgs::Polygon &triangle);
         bool CheckPointInRobot(const geometry_msgs::Point &obsPoint, const geometry_msgs::PolygonStamped &footprint, const geometry_msgs::Pose &goalInBase);
         bool CheckCollision(const geometry_msgs::Pose &goalInBase, const spencer_tracking_msgs::TargetPerson &targetMsg);

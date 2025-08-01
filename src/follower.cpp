@@ -5,13 +5,14 @@
 
 namespace FOLLOWING
 {
-    Follower::Follower(ros::NodeHandle nh) : nh_(nh), local_nh_("~"), tf_listener_(tf_buffer_), laserSub_(nh_, "scan", 100), odomSub_(nh_, "odom", 100), targetSub_(nh_, "/mono_following/target", 100)
+    Follower::Follower(ros::NodeHandle nh) : nh_(nh), local_nh_("~"), tf_listener_(tf_buffer_), laserSub_(nh_, "scan_master", 100), odomSub_(nh_, "odom", 100), targetSub_(nh_, "/mono_following/target", 100)
     {
         load_params();
         goalPub_ = nh_.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
         sync_ = std::make_shared<message_filters::Synchronizer<SyncPolicy>>(SyncPolicy(100), laserSub_, odomSub_, targetSub_);
         sync_->registerCallback(std::bind(&Follower::TargetCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
         InitPose();
+        ROS_INFO_STREAM("Following controller is ready!");
     }
 
     Follower::~Follower() {}
@@ -35,27 +36,30 @@ namespace FOLLOWING
         bestGoalInOdom_.pose.orientation.y = 0.0;
         bestGoalInOdom_.pose.orientation.z = 0.0;
         bestGoalInOdom_.pose.orientation.w = 1.0;
+
+        last_target_pos_.x = 0.0;
+        last_target_pos_.y = 0.0;
     }
 
-    void Follower::CreateObsList(const sensor_msgs::LaserScan::ConstPtr &scan)
+    void Follower::CreateObsList(const sensor_msgs::LaserScan &scan)
     {
         obsList_.poses.clear();
-        float angle = scan->angle_min;
-        const int angle_index_step = static_cast<int>(scan_angle_resolution_ / scan->angle_increment);
-        geometry_msgs::TransformStamped transform = tf_buffer_.lookupTransform("base_link", scan->header.frame_id, ros::Time(0), ros::Duration(0.1));
+        float angle = scan.angle_min;
+        const int angle_index_step = static_cast<int>(scan_angle_resolution_ / scan.angle_increment);
+        geometry_msgs::TransformStamped transform = tf_buffer_.lookupTransform("base_link", scan.header.frame_id, ros::Time(0), ros::Duration(0.1));
 
-        for (int i = 0; i < scan->ranges.size(); i++)
+        for (int i = 0; i < scan.ranges.size(); i++)
         {
-            const float range = scan->ranges[i];
-            if (range < scan->range_min || range > scan->range_max || i % angle_index_step != 0)
+            const float range = scan.ranges[i];
+            if (range < scan.range_min || range > scan.range_max || i % angle_index_step != 0)
             {
-                angle += scan->angle_increment;
+                angle += scan.angle_increment;
                 continue;
             }
 
             geometry_msgs::PointStamped obs_lidar;
-            obs_lidar.header.stamp = scan->header.stamp;
-            obs_lidar.header.frame_id = scan->header.frame_id;
+            obs_lidar.header.stamp = scan.header.stamp;
+            obs_lidar.header.frame_id = scan.header.frame_id;
             obs_lidar.point.x = range * std::cos(angle);
             obs_lidar.point.y = range * std::sin(angle);
             obs_lidar.point.z = 0.0;
@@ -66,7 +70,7 @@ namespace FOLLOWING
             geometry_msgs::Pose pose;
             pose.position = obs_base.point;
             obsList_.poses.push_back(pose);
-            angle += scan->angle_increment;
+            angle += scan.angle_increment;
         }
     }
 
@@ -274,9 +278,19 @@ namespace FOLLOWING
             return;
         }
 
+        if (!FOLLOWING::IsKeyTarget(last_target_pos_, target_msg.pose.pose.position))
+        {
+            return;
+        }
+        else
+        {
+            ROS_INFO_STREAM("New target!");
+        }
+
         GetTargetInBase(target_msg);
-        CreateObsList(laserMsg);
-        GenerateGoalSamplesInBase(10);
+        CreateObsList(*laserMsg);
+        int num_samples = 10;
+        GenerateGoalSamplesInBase(num_samples);
 
         std::vector<geometry_msgs::Pose> goalsInBase;
         for (auto &goal : goalSamplesInBase_.poses)
@@ -303,5 +317,7 @@ namespace FOLLOWING
         bestGoalInOdom_.header.frame_id = "odom";
         bestGoalInOdom_.pose = TransformBestGoalToOdom(odomMsg, bestGoalInBase);
         goalPub_.publish(bestGoalInOdom_);
+        ROS_INFO_STREAM("Move to: " << bestGoalInOdom_.pose.position.x << ", " << bestGoalInOdom_.pose.position.y);
+        last_target_pos_ = target_msg.pose.pose.position;
     }
 }
