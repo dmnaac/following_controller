@@ -288,30 +288,22 @@ namespace FOLLOWING
         }
 
         GetTargetInBase(target_msg);
-        CreateObsList(*laserMsg);
-        int num_samples = 10;
-        GenerateGoalSamplesInBase(num_samples);
 
-        std::vector<geometry_msgs::Pose> goalsInBase;
-        for (auto &goal : goalSamplesInBase_.poses)
-        {
-            if (!CheckCollision(goal, target_msg))
-            {
-                goalsInBase.push_back(goal);
-            }
-        }
-
+        double target_x = target_msg.pose.pose.position.x;
+        double target_y = target_msg.pose.pose.position.y;
+        double target_dist = std::sqrt(target_x * target_x + target_y * target_y);
+        double goal_x = target_x * (1 - distance_ / target_dist);
+        double goal_y = target_y * (1 - distance_ / target_dist);
+        double yaw = std::atan2(target_y, target_x);
+        geometry_msgs::Quaternion q;
+        q.x = 0.0;
+        q.y = 0.0;
+        q.z = std::sin(yaw / 2);
+        q.w = std::cos(yaw / 2);
         geometry_msgs::Pose bestGoalInBase;
-        double minDist = 10000.0;
-        for (auto &goal : goalsInBase)
-        {
-            double dist = std::sqrt(std::pow(goal.position.x, 2) + std::pow(goal.position.y, 2));
-            if (dist < minDist)
-            {
-                minDist = dist;
-                bestGoalInBase = goal;
-            }
-        }
+        bestGoalInBase.position.x = goal_x;
+        bestGoalInBase.position.y = goal_y;
+        bestGoalInBase.orientation = q;
 
         bestGoalInOdom_.header.stamp = ros::Time::now();
         bestGoalInOdom_.header.frame_id = "odom";
