@@ -1,16 +1,22 @@
 #include <Eigen/Dense>
 #include <tf/tf.h>
 #include "following_controller/follower.h"
-#include "following_controller/utils.h"
 
 namespace FOLLOWING
 {
-    Follower::Follower(ros::NodeHandle nh) : nh_(nh), local_nh_("~"), tf_listener_(tf_buffer_), laserSub_(nh_, "scan_master", 100), odomSub_(nh_, "odom", 100), targetSub_(nh_, "/mono_following/target", 100)
+    Follower::Follower(ros::NodeHandle nh) : nh_(nh), local_nh_("~"), tf_listener_(tf_buffer_), laserSub_(nh_, "scan_master", 100), odomSub_(nh_, "odom", 100), targetSub_(nh_, "/mono_following/target", 100), is_navigating_(false), scale_vel_x_(2.0), scale_vel_yaw_(2.5)
     {
         load_params();
         goalPub_ = nh_.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
+        cmdVelPub_ = nh_.advertise<geometry_msgs::Twist>("/cmd_vel_x", 1);
         sync_ = std::make_shared<message_filters::Synchronizer<SyncPolicy>>(SyncPolicy(100), laserSub_, odomSub_, targetSub_);
         sync_->registerCallback(std::bind(&Follower::TargetCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+        double rate = 10;
+        double control_dt_ = 1.0 / rate;
+        xy_pid_controller_ptr_ = std::make_unique<PID_controller>(0.3, 0.0, 0.1, 0.0, -max_vel_x_, max_vel_x_, -0.1, 0.1, control_dt_);
+        th_pid_controller_ptr_ = std::make_unique<PID_controller>(1.0, 0.5, 0.2, 0.0, -max_vel_yaw_, max_vel_yaw_, -0.2, 0.2, control_dt_);
+
         InitPose();
         ROS_INFO_STREAM("Following controller is ready!");
     }
@@ -41,25 +47,25 @@ namespace FOLLOWING
         last_target_pos_.y = 0.0;
     }
 
-    void Follower::CreateObsList(const sensor_msgs::LaserScan &scan)
+    void Follower::CreateObsList(const sensor_msgs::LaserScan::ConstPtr &scan)
     {
         obsList_.poses.clear();
-        float angle = scan.angle_min;
-        const int angle_index_step = static_cast<int>(scan_angle_resolution_ / scan.angle_increment);
-        geometry_msgs::TransformStamped transform = tf_buffer_.lookupTransform("base_link", scan.header.frame_id, ros::Time(0), ros::Duration(0.1));
+        float angle = scan->angle_min;
+        const int angle_index_step = static_cast<int>(scan_angle_resolution_ / scan->angle_increment);
+        geometry_msgs::TransformStamped transform = tf_buffer_.lookupTransform("base_link", scan->header.frame_id, ros::Time(0), ros::Duration(0.1));
 
-        for (int i = 0; i < scan.ranges.size(); i++)
+        for (int i = 0; i < scan->ranges.size(); i++)
         {
-            const float range = scan.ranges[i];
-            if (range < scan.range_min || range > scan.range_max || i % angle_index_step != 0)
+            const float range = scan->ranges[i];
+            if (range < scan->range_min || range > scan->range_max || i % angle_index_step != 0)
             {
-                angle += scan.angle_increment;
+                angle += scan->angle_increment;
                 continue;
             }
 
             geometry_msgs::PointStamped obs_lidar;
-            obs_lidar.header.stamp = scan.header.stamp;
-            obs_lidar.header.frame_id = scan.header.frame_id;
+            obs_lidar.header.stamp = scan->header.stamp;
+            obs_lidar.header.frame_id = scan->header.frame_id;
             obs_lidar.point.x = range * std::cos(angle);
             obs_lidar.point.y = range * std::sin(angle);
             obs_lidar.point.z = 0.0;
@@ -70,11 +76,63 @@ namespace FOLLOWING
             geometry_msgs::Pose pose;
             pose.position = obs_base.point;
             obsList_.poses.push_back(pose);
-            angle += scan.angle_increment;
+            angle += scan->angle_increment;
         }
     }
 
-    geometry_msgs::Pose Follower::TransformBestGoalToOdom(const nav_msgs::Odometry::ConstPtr &currentOdom, const geometry_msgs::Pose &bestGoalInBase)
+    void Follower::CalcPIDVel(const spencer_tracking_msgs::TargetPerson &targetMsg)
+    {
+        double px = targetMsg.pose.pose.position.x;
+        double py = targetMsg.pose.pose.position.y;
+        double rx = distance_;
+        double ry = 0.0;
+        double th_err = std::atan2(py, px);
+        double p_err = px - rx;
+
+        double w = th_pid_controller_ptr_->calc_output(-th_err, control_dt_) * scale_vel_yaw_;
+        double v = xy_pid_controller_ptr_->calc_output(-p_err, control_dt_) * scale_vel_x_;
+        double vx = 0.0;
+        double vyaw = w / 2.0;
+
+        cosnt double angle_threshold = M_PI / 4.0;
+        if (std::fabs(th_err) < angle_threshold)
+        {
+            double min_vel_x = enable_back_ ? -max_vel_x_ : 0.0;
+            vx = std::clamp(v, min_vel_x, max_vel_x_);
+
+            pid_vel_.linear.x = vx;
+            pid_vel_.angular.z = vyaw;
+        }
+        else
+        {
+            ROS_INFO_STREAM("Rotation too big");
+        }
+    }
+
+    void Follower::MoveOneStep(State &state, const double vel_x, const double vel_yaw)
+    {
+        const double sim_time_step = predict_time_ / static_cast<double>(sim_time_samples_);
+        state.yaw_ += vel_yaw * sim_time_step;
+        state.x_ += vel_x * std::cos(state.yaw_) * sim_time_step;
+        state.y_ += vel_x * std::sin(state.yaw_) * sim_time_step;
+        state.vel_x_ = vel_x;
+        state.vel_yaw_ = vel_yaw;
+    }
+
+    std::vector<State> Follower::GenerateTrajectory(const double vel_x, const double vel_yaw)
+    {
+        std::vector<State> trajectory;
+        trajectory.resize(sim_time_samples_);
+        State state;
+        for (int i = 0; i < sim_time_samples_; i++)
+        {
+            MoveOneStep(state, vel_x, vel_yaw);
+            trajectory[i] = state;
+        }
+        return trajectory;
+    }
+
+    geometry_msgs::Pose Follower::TransformPoseInBaseToOdom(const nav_msgs::Odometry::ConstPtr &currentOdom, const geometry_msgs::Pose &poseInBase)
     {
         geometry_msgs::Pose robotPoseInOdom = currentOdom->pose.pose;
         tf::Quaternion odom_quat(robotPoseInOdom.orientation.x,
@@ -84,10 +142,10 @@ namespace FOLLOWING
 
         tf::Matrix3x3 odom_rot(odom_quat);
 
-        tf::Quaternion goal_quat(bestGoalInBase.orientation.x,
-                                 bestGoalInBase.orientation.y,
-                                 bestGoalInBase.orientation.z,
-                                 bestGoalInBase.orientation.w);
+        tf::Quaternion goal_quat(poseInBase.orientation.x,
+                                 poseInBase.orientation.y,
+                                 poseInBase.orientation.z,
+                                 poseInBase.orientation.w);
 
         tf::Matrix3x3 goal_rot(goal_quat);
 
@@ -95,25 +153,25 @@ namespace FOLLOWING
         tf::Quaternion final_quat;
         final_rot.getRotation(final_quat);
 
-        tf::Vector3 goal_pos(bestGoalInBase.position.x,
-                             bestGoalInBase.position.y,
-                             bestGoalInBase.position.z);
-        tf::Vector3 rotated_goal_pos = odom_rot * goal_pos;
+        tf::Vector3 poseInBase_pos(poseInBase.position.x,
+                                   poseInBase.position.y,
+                                   poseInBase.position.z);
+        tf::Vector3 rotated_goal_pos = odom_rot * poseInBase_pos;
 
-        tf::Vector3 final_pos(rotated_goal_pos.x() + robotPoseInOdom.position.x,
-                              rotated_goal_pos.y() + robotPoseInOdom.position.y,
-                              rotated_goal_pos.z() + robotPoseInOdom.position.z);
+        tf::Vector3 final_pos(rotated_poseInBase_pos.x() + robotPoseInOdom.position.x,
+                              rotated_poseInBase_pos.y() + robotPoseInOdom.position.y,
+                              rotated_poseInBase_pos.z() + robotPoseInOdom.position.z);
 
-        geometry_msgs::Pose bestGoalInOdom;
-        bestGoalInOdom.position.x = final_pos.x();
-        bestGoalInOdom.position.y = final_pos.y();
-        bestGoalInOdom.position.z = final_pos.z();
-        bestGoalInOdom.orientation.x = final_quat.x();
-        bestGoalInOdom.orientation.y = final_quat.y();
-        bestGoalInOdom.orientation.z = final_quat.z();
-        bestGoalInOdom.orientation.w = final_quat.w();
+        geometry_msgs::Pose poseInOdom;
+        poseInOdom.position.x = final_pos.x();
+        poseInOdom.position.y = final_pos.y();
+        poseInOdom.position.z = final_pos.z();
+        poseInOdom.orientation.x = final_quat.x();
+        poseInOdom.orientation.y = final_quat.y();
+        poseInOdom.orientation.z = final_quat.z();
+        poseInOdom.orientation.w = final_quat.w();
 
-        return bestGoalInOdom;
+        return poseInOdom;
     }
 
     /**
@@ -173,6 +231,29 @@ namespace FOLLOWING
         return moved_footprint;
     }
 
+    geometry_msgs::PolygonStamped Follower::MoveFootprint(const State &step)
+    {
+        geometry_msgs::PolygonStamped moved_footprint;
+
+        for (auto &point : footprint_.polygon.points)
+        {
+            Eigen::VectorXf point_in(2);
+            point_in << point.x, point.y;
+            Eigen::Matrix2f rotation;
+            rotation = Eigen::Rotation2Df(step.yaw_);
+            Eigen::VectorXf point_out(2);
+            point_out = rotation * point_in;
+
+            geometry_msgs::Point32 moved_point;
+            moved_point.x = point_out.x() + step.x_;
+            moved_point.y = point_out.y() + step.y_;
+
+            moved_footprint.polygon.points.push_back(moved_point);
+        }
+
+        return moved_footprint;
+    }
+
     bool Follower::CheckPointInTriangle(const geometry_msgs::Point &obsPoint, const geometry_msgs::Polygon &triangle)
     {
         if (triangle.points.size() != 3)
@@ -208,11 +289,11 @@ namespace FOLLOWING
         }
     }
 
-    bool Follower::CheckPointInRobot(const geometry_msgs::Point &obsPoint, const geometry_msgs::PolygonStamped &footprint, const geometry_msgs::Pose &goalInBase)
+    bool Follower::CheckPointInRobot(const geometry_msgs::Point &obsPoint, const geometry_msgs::PolygonStamped &footprint, const State &step)
     {
         geometry_msgs::Point32 point;
-        point.x = goalInBase.position.x;
-        point.y = goalInBase.position.y;
+        point.x = step.x_;
+        point.y = step.y_;
 
         for (int i = 0; i < footprint.polygon.points.size(); i++)
         {
@@ -250,6 +331,22 @@ namespace FOLLOWING
         return false;
     }
 
+    bool Follower::CheckCollision(const std::vector<State> &trajectory)
+    {
+        for (auto &step : trajectory)
+        {
+            for (auto &obs : obsList_.poses)
+            {
+                const geometry_msgs::PolygonStamped moved_footprint = MoveFootprint(step);
+                if (CheckPointInRobot(obs.position, moved_footprint, step))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     void Follower::GetTargetInBase(const spencer_tracking_msgs::TargetPerson &targetMsg)
     {
         targetInBase_.pose.position.x = targetMsg.pose.pose.position.x;
@@ -263,12 +360,19 @@ namespace FOLLOWING
     void
     Follower::TargetCallback(const sensor_msgs::LaserScan::ConstPtr &laserMsg, const nav_msgs::Odometry::ConstPtr &odomMsg, const spencer_tracking_msgs::TargetPerson::ConstPtr &targetMsg)
     {
+        std::lock_guard<std::mutex> lock(nav_mutex_);
+        if (is_navigating_)
+        {
+            ROS_INFO_THROTTLE(1.0, "Status: Navigating");
+            return;
+        }
+
         spencer_tracking_msgs::TargetPerson target_msg;
         target_msg = *targetMsg;
 
         if (FOLLOWING::IsDoubleEqualtoZero(target_msg.pose.pose.position.x))
         {
-            ROS_WARN_STREAM("No target is tracked!");
+            ROS_WARN_STREAM("No target is found!");
             return;
         }
 
@@ -278,38 +382,47 @@ namespace FOLLOWING
             return;
         }
 
-        if (!FOLLOWING::IsKeyTarget(last_target_pos_, target_msg.pose.pose.position))
+        GetTargetInBase(target_msg);
+        CalcPIDVel(target_msg);
+        CreateObsList(laserMsg);
+
+        double vx = pid_vel_.linear.x;
+        double vyaw = pid_vel_.angular.z;
+        std::vector<State> trajectory = GenerateTrajectory(vx, vyaw);
+
+        if (!CheckCollision(trajectory))
         {
-            return;
+            cmd_vel_.linear.x = vx;
+            cmd_vel_.angular.z = vyaw;
+            cmdVelPub_.publish(cmd_vel_);
+            ROS_INFO_STREAM("Execute PID velocity command: vx: " << vx << ", vyaw: " << vyaw);
         }
         else
         {
-            ROS_INFO_STREAM("New target!");
+            is_navigating_ = true;
+            targetInOdom_.pose = TransformPoseInBaseToOdom(odomMsg, targetInBase_.pose);
+            move_base_msgs::MoveBaseGoal goal;
+            goal.target_pose.header.frame_id = "odom";
+            goal.target_pose.stamp = ros::Time::now();
+            goal.target_pose.pose.position.x = targetInOdom_.pose.position.x;
+            goal.target_pose.pose.position.y = targetInOdom_.pose.position.y;
+            goal.target_pose.pose.orientation.w = 1.0;
+            MoveBaseClient ac("move_base", true);
+            ac.sendGoal(goal);
+            if (!ac.waitForServer(ros::Duration(5.0)))
+            {
+                ROS_ERROR_STREAM("Failed to connect to move_base server!");
+                is_navigating_ = false;
+                return;
+            }
+            ROS_INFO_STREAM("Send goal to move_base!");
+            ac.sendGoal(goal,
+                        [this](const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResultConstPtr &result)
+                        {
+                            std::lock_guard<std::mutex> lock(nav_mutex_);
+                            is_navigating_ = false;
+                            ROS_INFO_STREAM("Move_base state: " << state.toString());
+                        });
         }
-
-        GetTargetInBase(target_msg);
-
-        double target_x = target_msg.pose.pose.position.x;
-        double target_y = target_msg.pose.pose.position.y;
-        double target_dist = std::sqrt(target_x * target_x + target_y * target_y);
-        double goal_x = target_x * (1 - distance_ / target_dist);
-        double goal_y = target_y * (1 - distance_ / target_dist);
-        double yaw = std::atan2(target_y, target_x);
-        geometry_msgs::Quaternion q;
-        q.x = 0.0;
-        q.y = 0.0;
-        q.z = std::sin(yaw / 2);
-        q.w = std::cos(yaw / 2);
-        geometry_msgs::Pose bestGoalInBase;
-        bestGoalInBase.position.x = goal_x;
-        bestGoalInBase.position.y = goal_y;
-        bestGoalInBase.orientation = q;
-
-        bestGoalInOdom_.header.stamp = ros::Time::now();
-        bestGoalInOdom_.header.frame_id = "odom";
-        bestGoalInOdom_.pose = TransformBestGoalToOdom(odomMsg, bestGoalInBase);
-        goalPub_.publish(bestGoalInOdom_);
-        ROS_INFO_STREAM("Move to: " << bestGoalInOdom_.pose.position.x << ", " << bestGoalInOdom_.pose.position.y);
-        last_target_pos_ = target_msg.pose.pose.position;
     }
 }

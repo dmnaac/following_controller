@@ -12,6 +12,10 @@ namespace FOLLOWING
         local_nh_.param<double>("SCAN_ANGLE_RESOLUTION", scan_angle_resolution_, 0.087);
         local_nh_.param<double>("FOOTPRINT_PADDING", footprint_padding_, 0.0);
 
+        local_nh_.param<double>("MAX_LINEAR_VEL", max_vel_x_, 0.2);
+        local_nh_.param<double>("MAX_ANGULAR_VEL", max_vel_yaw_, 0.5);
+        local_nh_.param<int>("SIM_TIME_SAMPLES", sim_time_samples_, 10);
+
         XmlRpc::XmlRpcValue footprint_xmlrpc;
         if (!local_nh_.getParam("FOOTPRINT", footprint_xmlrpc))
         {
