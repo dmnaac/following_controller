@@ -22,6 +22,7 @@
 #include <spencer_tracking_msgs/TargetPerson.h>
 
 #include "following_controller/pid_controller.h"
+#include "following_controller/state.h"
 #include "following_controller/utils.h"
 
 namespace FOLLOWING
@@ -46,6 +47,7 @@ namespace FOLLOWING
 
         std::unique_ptr<PID_controller> xy_pid_controller_ptr_;
         std::unique_ptr<PID_controller> th_pid_controller_ptr_;
+        bool enable_back_;
         double max_vel_x_;
         double max_vel_yaw_;
         double scale_vel_x_;
@@ -78,7 +80,6 @@ namespace FOLLOWING
         void CreateObsList(const sensor_msgs::LaserScan::ConstPtr &scan);
         bool CheckPointInTriangle(const geometry_msgs::Point &obsPoint, const geometry_msgs::Polygon &triangle);
         bool CheckPointInRobot(const geometry_msgs::Point &obsPoint, const geometry_msgs::PolygonStamped &footprint, const State &step);
-        bool CheckCollision(const geometry_msgs::Pose &goalInBase, const spencer_tracking_msgs::TargetPerson &targetMsg);
         bool CheckCollision(const std::vector<State> &trajectory);
         void GetTargetInBase(const spencer_tracking_msgs::TargetPerson &targetMsg);
         void GenerateGoalSamplesInBase(int numOfSamples);

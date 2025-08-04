@@ -146,6 +146,8 @@ add_executable(${PROJECT_NAME}_node
   src/following_controller_node.cpp
   src/follower.cpp
   src/params.cpp
+  src/pid_controller.cpp
+  src/state.cpp
   src/utils.cpp
 )
 

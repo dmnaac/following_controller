@@ -94,7 +94,7 @@ namespace FOLLOWING
         double vx = 0.0;
         double vyaw = w / 2.0;
 
-        cosnt double angle_threshold = M_PI / 4.0;
+        const double angle_threshold = M_PI / 4.0;
         if (std::fabs(th_err) < angle_threshold)
         {
             double min_vel_x = enable_back_ ? -max_vel_x_ : 0.0;
@@ -156,7 +156,7 @@ namespace FOLLOWING
         tf::Vector3 poseInBase_pos(poseInBase.position.x,
                                    poseInBase.position.y,
                                    poseInBase.position.z);
-        tf::Vector3 rotated_goal_pos = odom_rot * poseInBase_pos;
+        tf::Vector3 rotated_poseInBase_pos = odom_rot * poseInBase_pos;
 
         tf::Vector3 final_pos(rotated_poseInBase_pos.x() + robotPoseInOdom.position.x,
                               rotated_poseInBase_pos.y() + robotPoseInOdom.position.y,
@@ -172,7 +172,7 @@ namespace FOLLOWING
         poseInOdom.orientation.w = final_quat.w();
 
         return poseInOdom;
-    }
+    } 
 
     /**
      * @brief Generate goal samples around the target position in the base frame.
@@ -318,19 +318,6 @@ namespace FOLLOWING
         return false;
     }
 
-    bool Follower::CheckCollision(const geometry_msgs::Pose &goalInBase, const spencer_tracking_msgs::TargetPerson &targetMsg)
-    {
-        geometry_msgs::PolygonStamped moved_footprint = MoveFootprint(goalInBase, targetMsg);
-        for (auto &obs : obsList_.poses)
-        {
-            if (CheckPointInRobot(obs.position, moved_footprint, goalInBase))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
     bool Follower::CheckCollision(const std::vector<State> &trajectory)
     {
         for (auto &step : trajectory)
@@ -403,7 +390,7 @@ namespace FOLLOWING
             targetInOdom_.pose = TransformPoseInBaseToOdom(odomMsg, targetInBase_.pose);
             move_base_msgs::MoveBaseGoal goal;
             goal.target_pose.header.frame_id = "odom";
-            goal.target_pose.stamp = ros::Time::now();
+            goal.target_pose.header.stamp = ros::Time::now();
             goal.target_pose.pose.position.x = targetInOdom_.pose.position.x;
             goal.target_pose.pose.position.y = targetInOdom_.pose.position.y;
             goal.target_pose.pose.orientation.w = 1.0;
