@@ -7,7 +7,6 @@ namespace FOLLOWING
     Follower::Follower(ros::NodeHandle nh) : nh_(nh), local_nh_("~"), tf_listener_(tf_buffer_), laserSub_(nh_, "scan_master", 100), odomSub_(nh_, "odom", 100), targetSub_(nh_, "/mono_following/target", 100), is_navigating_(false), scale_vel_x_(2.0), scale_vel_yaw_(2.5)
     {
         load_params();
-        goalPub_ = nh_.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
         cmdVelPub_ = nh_.advertise<geometry_msgs::Twist>("/cmd_vel_x", 1);
         sync_ = std::make_shared<message_filters::Synchronizer<SyncPolicy>>(SyncPolicy(100), laserSub_, odomSub_, targetSub_);
         sync_->registerCallback(std::bind(&Follower::TargetCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
@@ -17,13 +16,13 @@ namespace FOLLOWING
         xy_pid_controller_ptr_ = std::make_unique<PID_controller>(0.3, 0.0, 0.1, 0.0, -max_vel_x_, max_vel_x_, -0.1, 0.1, control_dt_);
         th_pid_controller_ptr_ = std::make_unique<PID_controller>(1.0, 0.5, 0.2, 0.0, -max_vel_yaw_, max_vel_yaw_, -0.2, 0.2, control_dt_);
 
-        InitPose();
+        Init();
         ROS_INFO_STREAM("Following controller is ready!");
     }
 
     Follower::~Follower() {}
 
-    void Follower::InitPose()
+    void Follower::Init()
     {
         targetInBase_.header.frame_id = "base_link";
         targetInBase_.pose.position.x = 0.0;
@@ -34,17 +33,24 @@ namespace FOLLOWING
         targetInBase_.pose.orientation.z = 0.0;
         targetInBase_.pose.orientation.w = 1.0;
 
-        bestGoalInOdom_.header.frame_id = "odom";
-        bestGoalInOdom_.pose.position.x = 0.0;
-        bestGoalInOdom_.pose.position.y = 0.0;
-        bestGoalInOdom_.pose.position.z = 0.0;
-        bestGoalInOdom_.pose.orientation.x = 0.0;
-        bestGoalInOdom_.pose.orientation.y = 0.0;
-        bestGoalInOdom_.pose.orientation.z = 0.0;
-        bestGoalInOdom_.pose.orientation.w = 1.0;
+        pid_vel_.linear.x = 0.0;
+        pid_vel_.angular.z = 0.0;
 
-        last_target_pos_.x = 0.0;
-        last_target_pos_.y = 0.0;
+        cmd_vel_.linear.x = 0.0;
+        cmd_vel_.angular.z = 0.0;
+
+        last_pid_time_ = ros::Time::now();
+        curr_pid_time_ = ros::Time::now();
+    }
+
+    void Follower::GetTargetInBase(const spencer_tracking_msgs::TargetPerson &targetMsg)
+    {
+        targetInBase_.pose.position.x = targetMsg.pose.pose.position.x;
+        targetInBase_.pose.position.y = targetMsg.pose.pose.position.y;
+        targetInBase_.pose.orientation.x = targetMsg.pose.pose.orientation.x;
+        targetInBase_.pose.orientation.y = targetMsg.pose.pose.orientation.y;
+        targetInBase_.pose.orientation.z = targetMsg.pose.pose.orientation.z;
+        targetInBase_.pose.orientation.w = targetMsg.pose.pose.orientation.w;
     }
 
     void Follower::CreateObsList(const sensor_msgs::LaserScan::ConstPtr &scan)
@@ -88,7 +94,7 @@ namespace FOLLOWING
         double ry = 0.0;
         double th_err = std::atan2(py, px);
         double p_err = px - rx;
-
+        control_dt_ = (curr_pid_time_ - last_pid_time_).toSec();
         double w = th_pid_controller_ptr_->calc_output(-th_err, control_dt_) * scale_vel_yaw_;
         double v = xy_pid_controller_ptr_->calc_output(-p_err, control_dt_) * scale_vel_x_;
         double vx = 0.0;
@@ -172,36 +178,6 @@ namespace FOLLOWING
         poseInOdom.orientation.w = final_quat.w();
 
         return poseInOdom;
-    } 
-
-    /**
-     * @brief Generate goal samples around the target position in the base frame.
-     *
-     * This function generates a specified number of goal poses arranged in a semicircle
-     * around the target's position in the base frame, at a fixed distance.
-     *
-     * @param numOfSamples Number of goal samples to generate.
-     */
-    void Follower::GenerateGoalSamplesInBase(int numOfSamples)
-    {
-        int num = numOfSamples;
-        for (int i = 1; i < num; i++)
-        {
-            geometry_msgs::Pose pose;
-            double angle = M_PI * (i / num + 1);
-            double dx = distance_ * std::cos(angle);
-            double dy = distance_ * std::sin(angle);
-            pose.position.x = targetInBase_.pose.position.x + dx;
-            pose.position.y = targetInBase_.pose.position.y + dy;
-            double yaw = std::atan2(-dy, -dx);
-            geometry_msgs::Quaternion q;
-            q.x = 0.0;
-            q.y = 0.0;
-            q.z = std::sin(yaw / 2);
-            q.w = std::cos(yaw / 2);
-            pose.orientation = q;
-            goalSamplesInBase_.poses.push_back(pose);
-        }
     }
 
     geometry_msgs::PolygonStamped Follower::MoveFootprint(const geometry_msgs::Pose &goalInBase, const spencer_tracking_msgs::TargetPerson &targetMsg)
@@ -334,19 +310,10 @@ namespace FOLLOWING
         return false;
     }
 
-    void Follower::GetTargetInBase(const spencer_tracking_msgs::TargetPerson &targetMsg)
-    {
-        targetInBase_.pose.position.x = targetMsg.pose.pose.position.x;
-        targetInBase_.pose.position.y = targetMsg.pose.pose.position.y;
-        targetInBase_.pose.orientation.x = targetMsg.pose.pose.orientation.x;
-        targetInBase_.pose.orientation.y = targetMsg.pose.pose.orientation.y;
-        targetInBase_.pose.orientation.z = targetMsg.pose.pose.orientation.z;
-        targetInBase_.pose.orientation.w = targetMsg.pose.pose.orientation.w;
-    }
-
     void
     Follower::TargetCallback(const sensor_msgs::LaserScan::ConstPtr &laserMsg, const nav_msgs::Odometry::ConstPtr &odomMsg, const spencer_tracking_msgs::TargetPerson::ConstPtr &targetMsg)
     {
+        curr_pid_time_ = ros::Time::now();
         std::lock_guard<std::mutex> lock(nav_mutex_);
         if (is_navigating_)
         {
@@ -411,5 +378,7 @@ namespace FOLLOWING
                             ROS_INFO_STREAM("Move_base state: " << state.toString());
                         });
         }
+
+        last_pid_time_ = curr_pid_time_;
     }
 }

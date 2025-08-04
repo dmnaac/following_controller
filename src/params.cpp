@@ -15,6 +15,7 @@ namespace FOLLOWING
         local_nh_.param<double>("MAX_LINEAR_VEL", max_vel_x_, 0.2);
         local_nh_.param<double>("MAX_ANGULAR_VEL", max_vel_yaw_, 0.5);
         local_nh_.param<int>("SIM_TIME_SAMPLES", sim_time_samples_, 10);
+        local_nh_.param<double>("PREDICT_TIME", predict_time_, 2.0);
         local_nh_.param<bool>("ENABLE_BACK", enable_back_, true);
 
         XmlRpc::XmlRpcValue footprint_xmlrpc;

@@ -32,7 +32,6 @@ namespace FOLLOWING
     private:
         ros::NodeHandle nh_;
         ros::NodeHandle local_nh_;
-        ros::Publisher goalPub_;
         ros::Publisher cmdVelPub_;
 
         message_filters::Subscriber<sensor_msgs::LaserScan> laserSub_;
@@ -57,6 +56,8 @@ namespace FOLLOWING
         geometry_msgs::Twist cmd_vel_;
         int sim_time_samples_;
         double predict_time_;
+        ros::Time last_pid_time_;
+        ros::Time curr_pid_time_;
 
         tf2_ros::Buffer tf_buffer_;
         tf2_ros::TransformListener tf_listener_;
@@ -68,7 +69,7 @@ namespace FOLLOWING
         geometry_msgs::PolygonStamped footprint_;
         geometry_msgs::PoseStamped targetInBase_;
         geometry_msgs::PoseStamped targetInOdom_;
-        geometry_msgs::PoseArray goalSamplesInBase_;
+
         geometry_msgs::PoseArray obsList_;
         geometry_msgs::PoseStamped bestGoalInOdom_;
 
@@ -82,8 +83,7 @@ namespace FOLLOWING
         bool CheckPointInRobot(const geometry_msgs::Point &obsPoint, const geometry_msgs::PolygonStamped &footprint, const State &step);
         bool CheckCollision(const std::vector<State> &trajectory);
         void GetTargetInBase(const spencer_tracking_msgs::TargetPerson &targetMsg);
-        void GenerateGoalSamplesInBase(int numOfSamples);
-        void InitPose();
+        void Init();
         void CalcPIDVel(const spencer_tracking_msgs::TargetPerson &targetMsg);
         std::vector<State> GenerateTrajectory(const double vel_x, const double vel_yaw);
         void MoveOneStep(State &state, const double vel_x, const double vel_yaw);
