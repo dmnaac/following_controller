@@ -69,10 +69,7 @@ namespace FOLLOWING
         geometry_msgs::PolygonStamped footprint_;
         geometry_msgs::PoseStamped targetInBase_;
         geometry_msgs::PoseStamped targetInOdom_;
-
         geometry_msgs::PoseArray obsList_;
-        geometry_msgs::PoseStamped bestGoalInOdom_;
-
         geometry_msgs::Point last_target_pos_;
 
         geometry_msgs::Pose TransformPoseInBaseToOdom(const nav_msgs::Odometry::ConstPtr &currentOdom, const geometry_msgs::Pose &poseInBase);
