@@ -4,7 +4,7 @@
 
 namespace FOLLOWING
 {
-    Follower::Follower(ros::NodeHandle nh) : nh_(nh), local_nh_("~"), tf_listener_(tf_buffer_), laserSub_(nh_, "scan_master", 100), odomSub_(nh_, "odom", 100), targetSub_(nh_, "/mono_following/target", 100), is_navigating_(false), scale_vel_x_(2.0), scale_vel_yaw_(2.5)
+    Follower::Follower(ros::NodeHandle nh) : nh_(nh), local_nh_("~"), tf_listener_(tf_buffer_), laserSub_(nh_, "scan_master", 100), odomSub_(nh_, "odom", 100), targetSub_(nh_, "/mono_following/target", 100), is_navigating_(false), scale_vel_x_(2.0), scale_vel_yaw_(2.5), ac_("move_base", true)
     {
         load_params();
         cmdVelPub_ = nh_.advertise<geometry_msgs::Twist>("/cmd_vel_x", 1);
@@ -94,7 +94,8 @@ namespace FOLLOWING
         double ry = 0.0;
         double th_err = std::atan2(py, px);
         double p_err = px - rx;
-        control_dt_ = (curr_pid_time_ - last_pid_time_).toSec();
+        double dt = (curr_pid_time_ - last_pid_time_).toSec();
+        control_dt_ = dt > 0.1 ? 0.1 : dt;
         double w = th_pid_controller_ptr_->calc_output(-th_err, control_dt_) * scale_vel_yaw_;
         double v = xy_pid_controller_ptr_->calc_output(-p_err, control_dt_) * scale_vel_x_;
         double vx = 0.0;
@@ -140,42 +141,27 @@ namespace FOLLOWING
 
     geometry_msgs::Pose Follower::TransformPoseInBaseToOdom(const nav_msgs::Odometry::ConstPtr &currentOdom, const geometry_msgs::Pose &poseInBase)
     {
-        geometry_msgs::Pose robotPoseInOdom = currentOdom->pose.pose;
-        tf::Quaternion odom_quat(robotPoseInOdom.orientation.x,
-                                 robotPoseInOdom.orientation.y,
-                                 robotPoseInOdom.orientation.z,
-                                 robotPoseInOdom.orientation.w);
+        geometry_msgs::TransformStamped base_to_odom;
+        base_to_odom.header.frame_id = "odom";
+        base_to_odom.child_frame_id = "base_link";
+        base_to_odom.header.stamp = ros::Time::now();
 
-        tf::Matrix3x3 odom_rot(odom_quat);
+        base_to_odom.transform.translation.x = currentOdom->pose.pose.position.x;
+        base_to_odom.transform.translation.y = currentOdom->pose.pose.position.y;
+        base_to_odom.transform.translation.z = currentOdom->pose.pose.position.z;
 
-        tf::Quaternion goal_quat(poseInBase.orientation.x,
-                                 poseInBase.orientation.y,
-                                 poseInBase.orientation.z,
-                                 poseInBase.orientation.w);
-
-        tf::Matrix3x3 goal_rot(goal_quat);
-
-        tf::Matrix3x3 final_rot = odom_rot * goal_rot;
-        tf::Quaternion final_quat;
-        final_rot.getRotation(final_quat);
-
-        tf::Vector3 poseInBase_pos(poseInBase.position.x,
-                                   poseInBase.position.y,
-                                   poseInBase.position.z);
-        tf::Vector3 rotated_poseInBase_pos = odom_rot * poseInBase_pos;
-
-        tf::Vector3 final_pos(rotated_poseInBase_pos.x() + robotPoseInOdom.position.x,
-                              rotated_poseInBase_pos.y() + robotPoseInOdom.position.y,
-                              rotated_poseInBase_pos.z() + robotPoseInOdom.position.z);
+        base_to_odom.transform.rotation = currentOdom->pose.pose.orientation;
 
         geometry_msgs::Pose poseInOdom;
-        poseInOdom.position.x = final_pos.x();
-        poseInOdom.position.y = final_pos.y();
-        poseInOdom.position.z = final_pos.z();
-        poseInOdom.orientation.x = final_quat.x();
-        poseInOdom.orientation.y = final_quat.y();
-        poseInOdom.orientation.z = final_quat.z();
-        poseInOdom.orientation.w = final_quat.w();
+        try
+        {
+            tf2::doTransform(poseInBase, poseInOdom, base_to_odom);
+        }
+        catch (const tf2::TransformException &ex)
+        {
+            ROS_ERROR_STREAM("Transform failed: " << ex.what());
+            return geometry_msgs::Pose();
+        }
 
         return poseInOdom;
     }
@@ -349,6 +335,7 @@ namespace FOLLOWING
             cmd_vel_.linear.x = vx;
             cmd_vel_.angular.z = vyaw;
             cmdVelPub_.publish(cmd_vel_);
+            last_pid_time_ = curr_pid_time_;
             ROS_INFO_STREAM("Execute PID velocity command: vx: " << vx << ", vyaw: " << vyaw);
         }
         else
@@ -361,24 +348,21 @@ namespace FOLLOWING
             goal.target_pose.pose.position.x = targetInOdom_.pose.position.x;
             goal.target_pose.pose.position.y = targetInOdom_.pose.position.y;
             goal.target_pose.pose.orientation.w = 1.0;
-            MoveBaseClient ac("move_base", true);
-            ac.sendGoal(goal);
-            if (!ac.waitForServer(ros::Duration(5.0)))
+
+            if (!ac_.waitForServer(ros::Duration(5.0)))
             {
                 ROS_ERROR_STREAM("Failed to connect to move_base server!");
                 is_navigating_ = false;
                 return;
             }
             ROS_INFO_STREAM("Send goal to move_base!");
-            ac.sendGoal(goal,
-                        [this](const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResultConstPtr &result)
-                        {
-                            std::lock_guard<std::mutex> lock(nav_mutex_);
-                            is_navigating_ = false;
-                            ROS_INFO_STREAM("Move_base state: " << state.toString());
-                        });
+            ac_.sendGoal(goal,
+                         [this](const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResultConstPtr &result)
+                         {
+                             std::lock_guard<std::mutex> lock(nav_mutex_);
+                             is_navigating_ = false;
+                             ROS_INFO_STREAM("Move_base state: " << state.toString());
+                         });
         }
-
-        last_pid_time_ = curr_pid_time_;
     }
 }

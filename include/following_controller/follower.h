@@ -4,6 +4,7 @@
 #include <memory>
 #include <ros/ros.h>
 #include <tf2_ros/transform_listener.h>
+#include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
@@ -58,6 +59,7 @@ namespace FOLLOWING
         double predict_time_;
         ros::Time last_pid_time_;
         ros::Time curr_pid_time_;
+        MoveBaseClient ac_;
 
         tf2_ros::Buffer tf_buffer_;
         tf2_ros::TransformListener tf_listener_;
