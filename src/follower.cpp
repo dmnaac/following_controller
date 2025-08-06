@@ -347,7 +347,7 @@ namespace FOLLOWING
             goal.target_pose.header.stamp = ros::Time::now();
             goal.target_pose.pose.position.x = targetInOdom_.pose.position.x;
             goal.target_pose.pose.position.y = targetInOdom_.pose.position.y;
-            goal.target_pose.pose.orientation.w = 1.0;
+            goal.target_pose.pose.orientation = odomMsg->pose.pose.orientation;
 
             if (!ac_.waitForServer(ros::Duration(5.0)))
             {

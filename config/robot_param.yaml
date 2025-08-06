@@ -2,7 +2,7 @@
 # ROBOT_FRAME: "base_link"
 
 # Distance to the tracked person
-DISTANCE: 1.5
+DISTANCE: 2.0
 
 # Enable back movement
 ENABLE_BACK: False
