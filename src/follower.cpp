@@ -4,7 +4,7 @@
 
 namespace FOLLOWING
 {
-    Follower::Follower(ros::NodeHandle nh) : nh_(nh), local_nh_("~"), tf_listener_(tf_buffer_), laserSub_(nh_, "scan_master", 100), odomSub_(nh_, "odom", 100), targetSub_(nh_, "/mono_following/target", 100), is_navigating_(false), scale_vel_x_(2.0), scale_vel_yaw_(2.5), ac_("move_base", true)
+    Follower::Follower(ros::NodeHandle nh) : nh_(nh), local_nh_("~"), tf_listener_(tf_buffer_), laserSub_(nh_, "scan_master", 100), odomSub_(nh_, "odometry", 100), targetSub_(nh_, "/mono_following/target", 100), is_navigating_(false), scale_vel_x_(2.0), scale_vel_yaw_(2.5), ac_("move_base", true)
     {
         load_params();
         cmdVelPub_ = nh_.advertise<geometry_msgs::Twist>("/cmd_vel_x", 1);
@@ -142,7 +142,7 @@ namespace FOLLOWING
     geometry_msgs::Pose Follower::TransformPoseInBaseToOdom(const nav_msgs::Odometry::ConstPtr &currentOdom, const geometry_msgs::Pose &poseInBase)
     {
         geometry_msgs::TransformStamped base_to_odom;
-        base_to_odom.header.frame_id = "odom";
+        base_to_odom.header.frame_id = "world";
         base_to_odom.child_frame_id = "base_link";
         base_to_odom.header.stamp = ros::Time::now();
 
@@ -343,7 +343,7 @@ namespace FOLLOWING
             is_navigating_ = true;
             targetInOdom_.pose = TransformPoseInBaseToOdom(odomMsg, targetInBase_.pose);
             move_base_msgs::MoveBaseGoal goal;
-            goal.target_pose.header.frame_id = "odom";
+            goal.target_pose.header.frame_id = "world";
             goal.target_pose.header.stamp = ros::Time::now();
             goal.target_pose.pose.position.x = targetInOdom_.pose.position.x;
             goal.target_pose.pose.position.y = targetInOdom_.pose.position.y;

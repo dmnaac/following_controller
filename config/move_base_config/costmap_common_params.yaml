@@ -1,6 +1,7 @@
 footprint:
-  [[-0.2800, -0.1600], [-0.2800, 0.1600], [0.1200, 0.1600], [0.1200, -0.1600]]
-#footprint_padding: 0.05
+  # [[-0.2800, -0.1600], [-0.2800, 0.1600], [0.1200, 0.1600], [0.1200, -0.1600]]
+  [[0.1600, 0.1200], [-0.1600, 0.1200], [-0.1600, -0.2800], [0.1600, -0.2800]]
+footprint_padding: 0.05
 
 obstacle_layer:
   enabled: true
@@ -40,7 +41,7 @@ obstacle_layer:
     }
 
 global_inflation_layer:
-  enabled: false
+  enabled: true
   cost_scaling_factor: 1.0
   inflation_radius: 0.8
 
