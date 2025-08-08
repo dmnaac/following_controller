@@ -1,6 +1,6 @@
 footprint:
-  # [[-0.2800, -0.1600], [-0.2800, 0.1600], [0.1200, 0.1600], [0.1200, -0.1600]]
-  [[0.1600, 0.1200], [-0.1600, 0.1200], [-0.1600, -0.2800], [0.1600, -0.2800]]
+  [[-0.2800, -0.1600], [-0.2800, 0.1600], [0.1200, 0.1600], [0.1200, -0.1600]]
+  # [[0.1600, 0.1200], [-0.1600, 0.1200], [-0.1600, -0.2800], [0.1600, -0.2800]]
 footprint_padding: 0.05
 
 obstacle_layer:
@@ -14,9 +14,9 @@ obstacle_layer:
   mark_threshold: 0
   footprint_clearing_enabled: true
   combination_method: 1
-  track_unknown_space: true
+  track_unknown_space: false
   obstacle_range: 4.0
-  raytrace_range: 5.0
+  raytrace_range: 4.5
   observation_sources: scan_master #point_cloud
   scan_master:
     {
@@ -43,7 +43,7 @@ obstacle_layer:
 global_inflation_layer:
   enabled: true
   cost_scaling_factor: 1.0
-  inflation_radius: 0.8
+  inflation_radius: 0.5
 
 local_inflation_layer:
   enabled: true
