@@ -1,0 +1,16 @@
+<launch>
+      <!-- Start Cartographer Node -->
+      <node name="cartographer_node" pkg="cartographer_ros" type="cartographer_node" args="
+                -configuration_directory $(find following_controller)/config/mapping_config
+                -configuration_basename tmrobot_2d.lua" output="screen">
+            <remap from="scan" to="scan_master" />
+            <!-- <remap from="points2" to="camera/depth/color/points" /> -->
+            <remap from="imu" to="imu" />
+            <remap from="odom" to="odom" />
+      </node>
+
+      <!-- Generate ROS Map -->
+      <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros" type="cartographer_occupancy_grid_node" args="-resolution 0.1">
+      </node>
+
+</launch>

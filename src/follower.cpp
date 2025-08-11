@@ -166,6 +166,32 @@ namespace FOLLOWING
         return poseInOdom;
     }
 
+    geometry_msgs::Pose Follower::TransformPoseInBaseToMap(const geometry_msgs::Pose &poseInBase)
+    {
+        std::string map_frame = "map";
+        std::string base_frame = "base_link";
+
+        geometry_msgs::PoseStamped base_pose;
+        geometry_msgs::PoseStamped map_pose;
+
+        base_pose.header.frame_id = base_frame;
+        base_pose.header.stamp = ros::Time::now();
+        base_pose.pose = poseInBase;
+
+        try
+        {
+            auto transform = tf_buffer_.lookupTransform(map_frame, base_frame, ros::Time(0), ros::Duration(1.0));
+
+            tf_buffer_.transform(base_pose, map_pose, map_frame, ros::Duration(1.0));
+        }
+        catch (const std::exception &e)
+        {
+            ROS_ERROR("Transform error: %s", ex.what());
+        }
+
+        return map_pose.pose;
+    }
+
     geometry_msgs::PolygonStamped Follower::MoveFootprint(const geometry_msgs::Pose &goalInBase, const spencer_tracking_msgs::TargetPerson &targetMsg)
     {
         geometry_msgs::PolygonStamped moved_footprint;
@@ -297,7 +323,7 @@ namespace FOLLOWING
     }
 
     void
-    Follower::TargetCallback(const sensor_msgs::LaserScan::ConstPtr &laserMsg, const nav_msgs::Odometry::ConstPtr &odomMsg, const spencer_tracking_msgs::TargetPerson::ConstPtr &targetMsg)
+    Follower::TargetCallback(const sensor_msgs::LaserScan::ConstPtr &laserMsg, const spencer_tracking_msgs::TargetPerson::ConstPtr &targetMsg)
     {
         curr_pid_time_ = ros::Time::now();
         std::lock_guard<std::mutex> lock(nav_mutex_);
@@ -341,13 +367,13 @@ namespace FOLLOWING
         else
         {
             is_navigating_ = true;
-            targetInOdom_.pose = TransformPoseInBaseToOdom(odomMsg, targetInBase_.pose);
+            targetInMap_.pose = TransformPoseInBaseToMap(targetInBase_.pose);
             move_base_msgs::MoveBaseGoal goal;
-            goal.target_pose.header.frame_id = "odom";
+            goal.target_pose.header.frame_id = "map";
             goal.target_pose.header.stamp = ros::Time::now();
             goal.target_pose.pose.position.x = targetInOdom_.pose.position.x;
             goal.target_pose.pose.position.y = targetInOdom_.pose.position.y;
-            goal.target_pose.pose.orientation = odomMsg->pose.pose.orientation;
+            goal.target_pose.pose.orientation = target_msg.pose.pose.orientation;
 
             if (!ac_.waitForServer(ros::Duration(5.0)))
             {
