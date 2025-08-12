@@ -1,7 +1,7 @@
 <launch>
       <!-- Start Cartographer Node -->
       <node name="cartographer_node" pkg="cartographer_ros" type="cartographer_node" args="
-                -configuration_directory $(find following_controller)/config/mapping_config
+                -configuration_directory $(find following_controller)/config/carto_config
                 -configuration_basename tmrobot_2d.lua" output="screen">
             <remap from="scan" to="scan_master" />
             <!-- <remap from="points2" to="camera/depth/color/points" /> -->

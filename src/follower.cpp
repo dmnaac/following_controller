@@ -8,8 +8,8 @@ namespace FOLLOWING
     {
         load_params();
         cmdVelPub_ = nh_.advertise<geometry_msgs::Twist>("/cmd_vel_x", 1);
-        sync_ = std::make_shared<message_filters::Synchronizer<SyncPolicy>>(SyncPolicy(100), laserSub_, odomSub_, targetSub_);
-        sync_->registerCallback(std::bind(&Follower::TargetCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+        sync_ = std::make_shared<message_filters::Synchronizer<SyncPolicy>>(SyncPolicy(100), laserSub_, targetSub_);
+        sync_->registerCallback(std::bind(&Follower::TargetCallback, this, std::placeholders::_1, std::placeholders::_2));
 
         double rate = 10;
         double control_dt_ = 1.0 / rate;
@@ -32,6 +32,15 @@ namespace FOLLOWING
         targetInBase_.pose.orientation.y = 0.0;
         targetInBase_.pose.orientation.z = 0.0;
         targetInBase_.pose.orientation.w = 1.0;
+
+        targetInMap_.header.frame_id = "map";
+        targetInMap_.pose.position.x = 0.0;
+        targetInMap_.pose.position.y = 0.0;
+        targetInMap_.pose.position.z = 0.0;
+        targetInMap_.pose.orientation.x = 0.0;
+        targetInMap_.pose.orientation.y = 0.0;
+        targetInMap_.pose.orientation.z = 0.0;
+        targetInMap_.pose.orientation.w = 1.0;
 
         pid_vel_.linear.x = 0.0;
         pid_vel_.angular.z = 0.0;
@@ -186,7 +195,7 @@ namespace FOLLOWING
         }
         catch (const std::exception &e)
         {
-            ROS_ERROR("Transform error: %s", ex.what());
+            ROS_ERROR("Transform error: %s", e.what());
         }
 
         return map_pose.pose;
@@ -371,8 +380,8 @@ namespace FOLLOWING
             move_base_msgs::MoveBaseGoal goal;
             goal.target_pose.header.frame_id = "map";
             goal.target_pose.header.stamp = ros::Time::now();
-            goal.target_pose.pose.position.x = targetInOdom_.pose.position.x;
-            goal.target_pose.pose.position.y = targetInOdom_.pose.position.y;
+            goal.target_pose.pose.position.x = targetInMap_.pose.position.x;
+            goal.target_pose.pose.position.y = targetInMap_.pose.position.y;
             goal.target_pose.pose.orientation = target_msg.pose.pose.orientation;
 
             if (!ac_.waitForServer(ros::Duration(5.0)))
@@ -381,7 +390,7 @@ namespace FOLLOWING
                 is_navigating_ = false;
                 return;
             }
-            ROS_INFO_STREAM("Send goal to move_base!");
+            ROS_INFO_STREAM("Send goal to move_base: x: " << goal.target_pose.pose.position.x << " y: " << goal.target_pose.pose.position.y);
             ac_.sendGoal(goal,
                          [this](const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResultConstPtr &result)
                          {

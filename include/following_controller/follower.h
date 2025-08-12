@@ -70,7 +70,6 @@ namespace FOLLOWING
         std::vector<geometry_msgs::Point32> footprint_points_;
         geometry_msgs::PolygonStamped footprint_;
         geometry_msgs::PoseStamped targetInBase_;
-        geometry_msgs::PoseStamped targetInOdom_;
         geometry_msgs::PoseStamped targetInMap_;
         geometry_msgs::PoseArray obsList_;
         geometry_msgs::Point last_target_pos_;

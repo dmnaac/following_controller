@@ -12,6 +12,7 @@ options = {
     provide_odom_frame = true,
     publish_frame_projected_to_2d = false,
     use_pose_extrapolator = false,
+    publish_tracked_pose = true,
 
     use_odometry = true,
     use_nav_sat = false,
