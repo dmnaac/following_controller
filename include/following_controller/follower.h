@@ -44,6 +44,7 @@ namespace FOLLOWING
         bool is_navigating_;
         std::mutex nav_mutex_;
         typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+        MoveBaseClient ac_;
 
         std::unique_ptr<PID_controller> xy_pid_controller_ptr_;
         std::unique_ptr<PID_controller> th_pid_controller_ptr_;
@@ -59,8 +60,7 @@ namespace FOLLOWING
         double predict_time_;
         ros::Time last_pid_time_;
         ros::Time curr_pid_time_;
-        MoveBaseClient ac_;
-
+        
         tf2_ros::Buffer tf_buffer_;
         tf2_ros::TransformListener tf_listener_;
 
