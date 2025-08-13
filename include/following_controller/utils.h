@@ -1,6 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <XmlRpcValue.h>
 #include <geometry_msgs/Point32.h>
 #include <geometry_msgs/Point.h>
 
