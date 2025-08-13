@@ -52,8 +52,8 @@ namespace FOLLOWING
         std::unique_ptr<LookforTargetServer> lookfor_target_server_ptr_;
         std::unique_ptr<LookforTargetClient> lookfor_target_client_ptr_;
 
-        std::unique_ptr<PID_controller> xy_pid_controller_ptr_;
-        std::unique_ptr<PID_controller> th_pid_controller_ptr_;
+        std::shared_ptr<PID_controller> xy_pid_controller_ptr_;
+        std::shared_ptr<PID_controller> th_pid_controller_ptr_;
         bool enable_back_;
         double max_vel_x_;
         double max_vel_yaw_;
