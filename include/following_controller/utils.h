@@ -1,8 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "following_controller/follower.h"
-
 #include <geometry_msgs/Point32.h>
 #include <geometry_msgs/Point.h>
 
