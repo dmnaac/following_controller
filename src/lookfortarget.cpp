@@ -142,7 +142,8 @@ namespace FOLLOWING
         as_.publishFeedback(feedback_);
     }
 
-    LookforTargetClient::LookforTargetClient(ros::NodeHandle &nh) : nh_(nh), ac_(nh, "lookfor_target_action", true), is_looking_for_target_(false)
+    LookforTargetClient::LookforTargetClient(ros::NodeHandle &nh, const std::string &action_name) : nh_(nh), ac_(nh, action_name, true), is_looking_for_target_(false)
+
     {
         ROS_INFO("Waiting for lookfor_target_action server");
         bool is_server_available = ac_.waitForServer(ros::Duration(5.0));

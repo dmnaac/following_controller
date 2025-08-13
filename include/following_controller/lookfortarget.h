@@ -57,7 +57,8 @@ namespace FOLLOWING
         void FeedbackCB(const lookfor_target_action::LookforTargetActionFeedbackConstPtr &feedback);
 
     public:
-        LookforTargetClient(ros::NodeHandle &nh);
+        LookforTargetClient(ros::NodeHandle &nh, const std::string &action_name);
+
         ~LookforTargetClient();
 
         void SendGoal(const lookfor_target_action::LookforTargetActionGoal &goal);
