@@ -21,7 +21,7 @@ namespace FOLLOWING
         }
     }
 
-    LookforTargetServer::ExecuteCB(const lookfor_target_action::LookforTargetGoalConstPtr &goal)
+    LookforTargetServer::ExecuteCB(const lookfor_target_action::LookforTargetActionGoalConstPtr &goal)
     {
         ROS_INFO("Start lookfor_target_action");
         bool state = true; // true: anticlockwise, false: clockwise
@@ -161,7 +161,7 @@ namespace FOLLOWING
     {
     }
 
-    void LookforTargetClient::DoneCB(const actionlib::SimpleClientGoalState &state, const lookfor_target_action::LookforTargetResultConstPtr &result)
+    void LookforTargetClient::DoneCB(const actionlib::SimpleClientGoalState &state, const lookfor_target_action::LookforTargetActionResultConstPtr &result)
 
     {
         if (result->success)
