@@ -11,57 +11,61 @@
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Twist.h>
-#include "following_controller/LookforTargetAction.h"
 #include "following_controller/pid_controller.h"
 #include "following_controller/utils.h"
 
-class LookforTargetServer
+#include "lookfor_target_action/LookforTargetAction.h"
+
+namespace FOLLOWING
 {
-private:
-    ros::NodeHandle nh_;
-    actionlib::SimpleActionServer<following_controller::LookforTargetAction> as_;
-    ros::Publisher cmdVelPub_;
-    tf2_ros::Buffer tfBuffer_;
-    tr2_ros::TransformListenner tfListener_;
+    class LookforTargetServer
+    {
+    private:
+        ros::NodeHandle nh_;
+        actionlib::SimpleActionServer<lookfor_target_action::LookforTargetAction> as_;
+        ros::Publisher cmdVelPub_;
+        tf2_ros::Buffer tfBuffer_;
+        tf2_ros::TransformListenner tfListener_;
 
-    std::string action_name_;
-    following_controller::LookforTargetActionFeedback feedback_;
-    following_controller::LookforTargetActionResult result_;
+        std::string action_name_;
+        lookfor_target_action::LookforTargetActionFeedback feedback_;
+        lookfor_target_action::LookforTargetActionResult result_;
 
-    float current_angle_;
-    bool is_active_;
-    double control_dt_;
+        float current_angle_;
+        bool is_active_;
+        double control_dt_;
 
-    std::unique_ptr<PID_controller> rot_pid_controller_ptr_;
+        std::unique_ptr<PID_controller> rot_pid_controller_ptr_;
 
-    void ExecuteCB(const following_controller::LookforTargetActionGoalConstPtr &goal);
-    void PublishFeedback(double current_yaw);
+        void ExecuteCB(const lookfor_target_action::LookforTargetActionGoalConstPtr &goal);
+        void PublishFeedback(double current_yaw);
 
-public:
-    LookforTargetServer(ros::NodeHandle &nh, const std::string &action_name);
-    ~LookforTargetServer();
-};
+    public:
+        LookforTargetServer(ros::NodeHandle &nh, const std::string &action_name);
+        ~LookforTargetServer();
+    };
 
-class LookforTargetClient
-{
-private:
-    ros::NodeHandle nh_;
-    actionlib::SimpleActionClient<following_controller::LookforTargetAction> ac_;
-    bool is_looking_for_target_;
+    class LookforTargetClient
+    {
+    private:
+        ros::NodeHandle nh_;
+        actionlib::SimpleActionClient<lookfor_target_action::LookforTargetAction> ac_;
+        bool is_looking_for_target_;
 
-    void DoneCB(const actionlib::SimpleClientGoalState &state, const following_controller::LookforTargetActionResultConstPtr &result);
-    void ActiveCB();
-    void FeedbackCB(const following_controller::LookforTargetActionFeedbackConstPtr &feedback);
+        void DoneCB(const actionlib::SimpleClientGoalState &state, const lookfor_target_action::LookforTargetActionResultConstPtr &result);
+        void ActiveCB();
+        void FeedbackCB(const lookfor_target_action::LookforTargetActionFeedbackConstPtr &feedback);
 
-public:
-    LookforTargetClient(/* args */);
-    ~LookforTargetClient();
+    public:
+        LookforTargetClient(ros::NodeHandle &nh);
+        ~LookforTargetClient();
 
-    void SendGoal(const following_controller::LookforTargetActionGoal &goal);
-    void CancelGoal();
-    bool IsActive() const;
-    bool IsServerConnected() const;
-    bool GetState() const;
-};
+        void SendGoal(const lookfor_target_action::LookforTargetActionGoal &goal);
+        void CancelGoal();
+        bool IsActive() const;
+        bool IsServerConnected() const;
+        bool GetState() const;
+    };
+}
 
 #endif // FOLLOWING_CONTROLLER_LOOKFORTARGET_H

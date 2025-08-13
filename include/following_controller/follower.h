@@ -48,8 +48,9 @@ namespace FOLLOWING
         typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
         MoveBaseClient ac_;
 
-        LookforTargetServer lookfor_target_server_;
-        LookforTargetClient lookfor_target_client_;
+        FOLLOWING::LookforTargetServer lookfor_target_server_;
+        FOLLOWING::LookforTargetClient lookfor_target_client_;
+        std::unique_ptr<LookforTargetServer>;
 
         std::unique_ptr<PID_controller> xy_pid_controller_ptr_;
         std::unique_ptr<PID_controller> th_pid_controller_ptr_;
