@@ -22,14 +22,14 @@ namespace FOLLOWING
     {
     private:
         ros::NodeHandle nh_;
-        actionlib::SimpleActionServer<lookfor_target_action::LookforTargetAction> as_;
+        actionlib::SimpleActionServer<lookfor_target_action::LookforTarget> as_;
         ros::Publisher cmdVelPub_;
         tf2_ros::Buffer tfBuffer_;
         tf2_ros::TransformListener tfListener_;
 
         std::string action_name_;
-        lookfor_target_action::LookforTargetActionFeedback feedback_;
-        lookfor_target_action::LookforTargetActionResult result_;
+        lookfor_target_action::LookforTargetFeedback feedback_;
+        lookfor_target_action::LookforTargetResult result_;
 
         float current_angle_;
         bool is_active_;
@@ -37,7 +37,7 @@ namespace FOLLOWING
 
         std::unique_ptr<PID_controller> rot_pid_controller_ptr_;
 
-        void ExecuteCB(const lookfor_target_action::LookforTargetActionGoalConstPtr &goal);
+        void ExecuteCB(const lookfor_target_action::LookforTargetGoalConstPtr &goal);
         void PublishFeedback(double current_yaw);
 
     public:
@@ -49,19 +49,19 @@ namespace FOLLOWING
     {
     private:
         ros::NodeHandle nh_;
-        actionlib::SimpleActionClient<lookfor_target_action::LookforTargetAction> ac_;
+        actionlib::SimpleActionClient<lookfor_target_action::LookforTarget> ac_;
         bool is_looking_for_target_;
 
-        void DoneCB(const actionlib::SimpleClientGoalState &state, const lookfor_target_action::LookforTargetActionResultConstPtr &result);
+        void DoneCB(const actionlib::SimpleClientGoalState &state, const lookfor_target_action::LookforTargetResultConstPtr &result);
         void ActiveCB();
-        void FeedbackCB(const lookfor_target_action::LookforTargetActionFeedbackConstPtr &feedback);
+        void FeedbackCB(const lookfor_target_action::LookforTargetFeedbackConstPtr &feedback);
 
     public:
         LookforTargetClient(ros::NodeHandle &nh, const std::string &action_name);
 
         ~LookforTargetClient();
 
-        void SendGoal(const lookfor_target_action::LookforTargetActionGoal &goal);
+        void SendGoal(const lookfor_target_action::LookforTargetGoal &goal);
         void CancelGoal();
         bool IsActive() const;
         bool IsServerConnected() const;

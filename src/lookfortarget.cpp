@@ -2,7 +2,7 @@
 
 namespace FOLLOWING
 {
-    LookforTargetServer::LookforTargetServer(ros::NodeHandle &nh, const std::string &action_name) : nh_(nh), as_(nh, action_name, boost::bind(&LookforTargetActionServer::ExecuteCB, this, _1), false), tfListener_(tfBuffer_), action_name_(action_name), is_active_(false)
+    LookforTargetServer::LookforTargetServer(ros::NodeHandle &nh, const std::string &action_name) : nh_(nh), as_(nh, action_name, boost::bind(&LookforTargetServer::ExecuteCB, this, _1), false), tfListener_(tfBuffer_), action_name_(action_name), is_active_(false)
     {
         cmdVelPub_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel_x", 10);
         double rate = 10;
@@ -21,7 +21,7 @@ namespace FOLLOWING
         }
     }
 
-    LookforTargetServer::ExecuteCB(const lookfor_target_action::LookforTargetActionGoalConstPtr &goal)
+    LookforTargetServer::ExecuteCB(const lookfor_target_action::LookforTargetGoalConstPtr &goal)
     {
         ROS_INFO("Start lookfor_target_action");
         bool state = true; // true: anticlockwise, false: clockwise
@@ -161,7 +161,8 @@ namespace FOLLOWING
     {
     }
 
-    void LookforTargetClient::DoneCB(const actionlib::SimpleClientGoalState &state, const following_controller::LookforTargetActionResultConstPtr &result)
+    void LookforTargetClient::DoneCB(const actionlib::SimpleClientGoalState &state, const lookfor_target_action::LookforTargetResultConstPtr &result)
+
     {
         if (result->success)
         {
@@ -180,12 +181,14 @@ namespace FOLLOWING
         ROS_INFO("Action started");
     }
 
-    void LookforTargetClient::FeedbackCB(const following_controller::LookforTargetActionFeedbackConstPtr &feedback)
+    void LookforTargetClient::FeedbackCB(const lookfor_target_action::LookforTargetActionFeedbackConstPtr &feedback)
+
     {
         ROS_INFO("Current yaw: %f", feedback->current_yaw);
     }
 
-    void LookforTargetClient::SendGoal(const following_controller::LookforTargetActionGoal &goal)
+    void LookforTargetClient::SendGoal(const lookfor_target_action::LookforTargetActionGoal &goal)
+
     {
         ac_.sendGoal(goal,
                      boost::bind(&LookforTargetClient::DoneCB, this, _1, _2),
