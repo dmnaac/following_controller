@@ -22,8 +22,8 @@
 #include <mutex>
 #include <spencer_tracking_msgs/TargetPerson.h>
 
-#include "following_controller/pid_controller.h"
 #include "following_controller/lookfortarget.h"
+#include "following_controller/pid_controller.h"
 #include "following_controller/state.h"
 #include "following_controller/utils.h"
 
