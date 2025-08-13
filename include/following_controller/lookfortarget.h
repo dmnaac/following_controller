@@ -25,7 +25,7 @@ namespace FOLLOWING
         actionlib::SimpleActionServer<lookfor_target_action::LookforTargetAction> as_;
         ros::Publisher cmdVelPub_;
         tf2_ros::Buffer tfBuffer_;
-        tf2_ros::TransformListenner tfListener_;
+        tf2_ros::TransformListener tfListener_;
 
         std::string action_name_;
         lookfor_target_action::LookforTargetActionFeedback feedback_;

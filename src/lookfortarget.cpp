@@ -21,7 +21,7 @@ namespace FOLLOWING
         }
     }
 
-    LookforTargetServer::ExecuteCB(const following_controller::LookforTargetActionGoalConstPtr &goal)
+    LookforTargetServer::ExecuteCB(const lookfor_target_action::LookforTargetActionGoalConstPtr &goal)
     {
         ROS_INFO("Start lookfor_target_action");
         bool state = true; // true: anticlockwise, false: clockwise
