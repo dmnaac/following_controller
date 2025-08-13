@@ -10,6 +10,8 @@ namespace FOLLOWING
     double getNumberFromXMLRPC(XmlRpc::XmlRpcValue &value, const std::string &full_param_name);
     std::vector<geometry_msgs::Point32> makeFootprintFromXMLRPC(XmlRpc::XmlRpcValue &footprint_xmlrpc, const std::string &full_param_name);
     bool IsKeyTarget(geometry_msgs::Point last_target_pos, geometry_msgs::Point cur_target_pos);
+    double rad2deg(double rad);
+    double deg2rad(double deg);
 }
 
 #endif // UTILS_H

@@ -348,7 +348,7 @@ namespace FOLLOWING
         spencer_tracking_msgs::TargetPerson target_msg;
         target_msg = *targetMsg;
 
-        if (utils::IsDoubleEqualtoZero(target_msg.pose.pose.position.x))
+        if (FOLLOWING::IsDoubleEqualtoZero(target_msg.pose.pose.position.x))
         {
             ROS_WARN_STREAM("No target is found!");
             if (!lookfor_target_client_ptr_->GetState() && !has_tried_lookfor_target_)

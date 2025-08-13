@@ -66,9 +66,9 @@ namespace FOLLOWING
             {
                 double currentYaw = tf2::getYaw(transformStamped.transform.rotation);
                 // PublishFeedback(currentYaw);
-                double rot = utils::rad2deg(currentYaw - initialYaw);
+                double rot = FOLLOWING::rad2deg(currentYaw - initialYaw);
                 double therr = theta - rot;
-                if (!utils::IsDoubleEqualtoZero(therr, 0.1))
+                if (!FOLLOWING::IsDoubleEqualtoZero(therr, 0.1))
                 {
                     double w = th_pid_controller_ptr_->calc_output(-therr, control_dt_) * 2.5;
                     double velYaw = w / 2.0;
@@ -90,9 +90,9 @@ namespace FOLLOWING
             {
                 double currentYaw = tf2::getYaw(transformStamped.transform.rotation);
                 // PublishFeedback(currentYaw);
-                double rot = utils::rad2deg(currentYaw - initialYaw);
+                double rot = FOLLOWING::rad2deg(currentYaw - initialYaw);
                 double therr = rot - goal->angle;
-                if (!utils::IsDoubleEqualtoZero(therr, 0.1))
+                if (!FOLLOWING::IsDoubleEqualtoZero(therr, 0.1))
                 {
                     double w = th_pid_controller_ptr_->calc_output(-therr, control_dt_) * 2.5;
                     double velYaw = w / 2.0;
