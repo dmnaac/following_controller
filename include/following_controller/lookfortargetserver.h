@@ -1,5 +1,5 @@
-#ifndef FOLLOWING_CONTROLLER_LOOKFORTARGET_H
-#define FOLLOWING_CONTROLLER_LOOKFORTARGET_H
+#ifndef FOLLOWING_CONTROLLER_LOOKFORTARGETSERVER_H
+#define FOLLOWING_CONTROLLER_LOOKFORTARGETSERVER_H
 
 #include <ros/ros.h>
 #include <cmath>
@@ -44,30 +44,6 @@ namespace FOLLOWING
         LookforTargetServer(ros::NodeHandle &nh, const std::string &action_name);
         ~LookforTargetServer();
     };
-
-    class LookforTargetClient
-    {
-    private:
-        ros::NodeHandle nh_;
-        actionlib::SimpleActionClient<lookfor_target_action::LookforTargetAction> ac_;
-
-        bool is_looking_for_target_;
-
-        void DoneCB(const actionlib::SimpleClientGoalState &state, const lookfor_target_action::LookforTargetActionResultConstPtr &result);
-        void ActiveCB();
-        void FeedbackCB(const lookfor_target_action::LookforTargetActionFeedbackConstPtr &feedback);
-
-    public:
-        LookforTargetClient(ros::NodeHandle &nh, const std::string &action_name);
-
-        ~LookforTargetClient();
-
-        void SendGoal(const lookfor_target_action::LookforTargetActionGoal &goal);
-        void CancelGoal();
-        bool IsActive() const;
-        bool IsServerConnected() const;
-        bool GetState() const;
-    };
 }
 
-#endif // FOLLOWING_CONTROLLER_LOOKFORTARGET_H
+#endif // FOLLOWING_CONTROLLER_LOOKFORTARGETSERVER_H
