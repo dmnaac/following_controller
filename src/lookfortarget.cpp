@@ -21,7 +21,7 @@ namespace FOLLOWING
         }
     }
 
-    LookforTargetServer::ExecuteCB(const lookfor_target_action::LookforTargetActionGoalConstPtr &goal)
+    void LookforTargetServer::ExecuteCB(const lookfor_target_action::LookforTargetActionGoalConstPtr &goal)
     {
         ROS_INFO("Start lookfor_target_action");
         bool state = true; // true: anticlockwise, false: clockwise
@@ -136,14 +136,13 @@ namespace FOLLOWING
         is_active_ = false;
     }
 
-    LookforTargetServer::PublishFeedback(double current_yaw)
+    void LookforTargetServer::PublishFeedback(double current_yaw)
     {
         feedback_.current_yaw = current_yaw;
         as_.publishFeedback(feedback_);
     }
 
     LookforTargetClient::LookforTargetClient(ros::NodeHandle &nh, const std::string &action_name) : nh_(nh), ac_(nh, action_name, true), is_looking_for_target_(false)
-
     {
         ROS_INFO("Waiting for lookfor_target_action server");
         bool is_server_available = ac_.waitForServer(ros::Duration(5.0));
@@ -162,7 +161,6 @@ namespace FOLLOWING
     }
 
     void LookforTargetClient::DoneCB(const actionlib::SimpleClientGoalState &state, const lookfor_target_action::LookforTargetActionResultConstPtr &result)
-
     {
         if (result->success)
         {
@@ -182,13 +180,11 @@ namespace FOLLOWING
     }
 
     void LookforTargetClient::FeedbackCB(const lookfor_target_action::LookforTargetActionFeedbackConstPtr &feedback)
-
     {
         ROS_INFO("Current yaw: %f", feedback->current_yaw);
     }
 
     void LookforTargetClient::SendGoal(const lookfor_target_action::LookforTargetActionGoal &goal)
-
     {
         ac_.sendGoal(goal,
                      boost::bind(&LookforTargetClient::DoneCB, this, _1, _2),
