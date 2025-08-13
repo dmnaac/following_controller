@@ -4,7 +4,7 @@
 
 namespace FOLLOWING
 {
-    Follower::Follower(ros::NodeHandle nh) : nh_(nh), local_nh_("~"), tf_listener_(tf_buffer_), laserSub_(nh_, "scan_master", 100), odomSub_(nh_, "/odom", 100), targetSub_(nh_, "/mono_following/target", 100), is_navigating_(false), scale_vel_x_(2.0), scale_vel_yaw_(2.5), ac_("move_base", true)
+    Follower::Follower(ros::NodeHandle nh) : nh_(nh), local_nh_("~"), tf_listener_(tf_buffer_), laserSub_(nh_, "scan_master", 100), odomSub_(nh_, "/odom", 100), targetSub_(nh_, "/mono_following/target", 100), is_navigating_(false), has_tried_lookfor_target_(false), scale_vel_x_(2.0), scale_vel_yaw_(2.5), ac_("move_base", true), lookfor_target_server_(nh, "lookfor_target_action"), lookfor_target_client_(nh)
     {
         load_params();
         cmdVelPub_ = nh_.advertise<geometry_msgs::Twist>("/cmd_vel_x", 1);
@@ -345,10 +345,26 @@ namespace FOLLOWING
         spencer_tracking_msgs::TargetPerson target_msg;
         target_msg = *targetMsg;
 
-        if (FOLLOWING::IsDoubleEqualtoZero(target_msg.pose.pose.position.x))
+        if (utils::IsDoubleEqualtoZero(target_msg.pose.pose.position.x))
         {
             ROS_WARN_STREAM("No target is found!");
+            if (!lookfor_target_client_.GetState() && !has_tried_lookfor_target_)
+            {
+                ROS_INFO("Start lookfor_target_action");
+                following_controller::LookforTargetActionGoal goal;
+                goal.angle = 30.0;
+                lookfor_target_client_.SendGoal(goal);
+                has_tried_lookfor_target_ = true;
+            }
             return;
+        }
+        else
+        {
+            if (lookfor_target_client_.GetState())
+            {
+                lookfor_target_client_.CancelGoal();
+            }
+            has_tried_lookfor_target_ = false;
         }
 
         if (target_msg.pose.pose.position.x > 3.5)

@@ -23,6 +23,7 @@
 #include <spencer_tracking_msgs/TargetPerson.h>
 
 #include "following_controller/pid_controller.h"
+#include "following_controller/lookfortarget.h"
 #include "following_controller/state.h"
 #include "following_controller/utils.h"
 
@@ -42,9 +43,13 @@ namespace FOLLOWING
         std::shared_ptr<message_filters::Synchronizer<SyncPolicy>> sync_;
 
         bool is_navigating_;
+        bool has_tried_lookfor_target_;
         std::mutex nav_mutex_;
         typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
         MoveBaseClient ac_;
+
+        LookforTargetServer lookfor_target_server_;
+        LookforTargetClient lookfor_target_client_;
 
         std::unique_ptr<PID_controller> xy_pid_controller_ptr_;
         std::unique_ptr<PID_controller> th_pid_controller_ptr_;
@@ -60,7 +65,7 @@ namespace FOLLOWING
         double predict_time_;
         ros::Time last_pid_time_;
         ros::Time curr_pid_time_;
-        
+
         tf2_ros::Buffer tf_buffer_;
         tf2_ros::TransformListener tf_listener_;
 

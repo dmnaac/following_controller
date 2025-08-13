@@ -1,10 +1,11 @@
 # goal definition
-float32 angle
+float64 angle
 
 ---
 # result definition
 bool success
+string message
 
 ---
 # feedback
-float32 current_angle
+float64 current_yaw
