@@ -3,6 +3,9 @@
 
 #include "following_controller/follower.h"
 
+#include <geometry_msgs/Point32.h>
+#include <geometry_msgs/Point.h>
+
 namespace FOLLOWING
 {
     const double EPSILON = 1e-9;
