@@ -1,6 +1,9 @@
 #ifndef FOLLOWING_CONTROLLER_FOLLOWER_H
 #define FOLLOWING_CONTROLLER_FOLLOWER_H
 
+#include "following_controller/lookfortargetclient.h"
+#include "following_controller/lookfortargetserver.h"
+
 #include <memory>
 #include <ros/ros.h>
 #include <tf2_ros/transform_listener.h>
@@ -22,8 +25,6 @@
 #include <mutex>
 #include <spencer_tracking_msgs/TargetPerson.h>
 
-#include "following_controller/lookfortargetclient.h"
-#include "following_controller/lookfortargetserver.h"
 #include "following_controller/pid_controller.h"
 #include "following_controller/state.h"
 #include "following_controller/utils.h"
@@ -49,7 +50,7 @@ namespace FOLLOWING
         typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
         MoveBaseClient ac_;
 
-        std::shared_ptr<LookforTargetClient> lookfor_target_client_ptr_;
+        std::unique_ptr<LookforTargetClient> lookfor_target_client_ptr_;
         std::unique_ptr<LookforTargetServer> lookfor_target_server_ptr_;
 
         std::unique_ptr<PID_controller> xy_pid_controller_ptr_;

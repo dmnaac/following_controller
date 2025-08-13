@@ -16,7 +16,7 @@ namespace FOLLOWING
         xy_pid_controller_ptr_ = std::make_unique<PID_controller>(0.3, 0.0, 0.1, 0.0, -max_vel_x_, max_vel_x_, -0.1, 0.1, control_dt_);
         th_pid_controller_ptr_ = std::make_unique<PID_controller>(1.0, 0.5, 0.2, 0.0, -max_vel_yaw_, max_vel_yaw_, -0.2, 0.2, control_dt_);
 
-        lookfor_target_client_ptr_ = std::make_shared<LookforTargetClient>(nh_, "lookfor_target_action");
+        lookfor_target_client_ptr_ = std::make_unique<LookforTargetClient>(nh_, "lookfor_target_action");
         lookfor_target_server_ptr_ = std::make_unique<LookforTargetServer>(nh_, "lookfor_target_action");
 
         Init();
