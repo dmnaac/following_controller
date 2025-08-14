@@ -21,7 +21,7 @@ namespace FOLLOWING
         }
     }
 
-    void LookforTargetServer::ExecuteCB(const lookfor_target_action::LookforTargetActionGoalConstPtr &goal)
+    void LookforTargetServer::ExecuteCB(const lookfor_target_action::LookforTargetGoalConstPtr &goal)
     {
         ROS_INFO("Start lookfor_target_action");
         bool state = true; // true: anticlockwise, false: clockwise
@@ -70,7 +70,7 @@ namespace FOLLOWING
                 double therr = theta - rot;
                 if (!FOLLOWING::IsDoubleEqualtoZero(therr, 0.1))
                 {
-                    double w = th_pid_controller_ptr_->calc_output(-therr, control_dt_) * 2.5;
+                    double w = rot_pid_controller_ptr_->calc_output(-therr, control_dt_) * 2.5;
                     double velYaw = w / 2.0;
                     geometry_msgs::Twist vel;
                     vel.angular.z = velYaw;
@@ -94,7 +94,7 @@ namespace FOLLOWING
                 double therr = rot - goal->angle;
                 if (!FOLLOWING::IsDoubleEqualtoZero(therr, 0.1))
                 {
-                    double w = th_pid_controller_ptr_->calc_output(-therr, control_dt_) * 2.5;
+                    double w = rot_pid_controller_ptr_->calc_output(-therr, control_dt_) * 2.5;
                     double velYaw = w / 2.0;
                     geometry_msgs::Twist vel;
                     vel.angular.z = velYaw;

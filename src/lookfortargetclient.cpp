@@ -20,7 +20,7 @@ namespace FOLLOWING
     {
     }
 
-    void LookforTargetClient::DoneCB(const actionlib::SimpleClientGoalState &state, const lookfor_target_action::LookforTargetActionResultConstPtr &result)
+    void LookforTargetClient::DoneCB(const actionlib::SimpleClientGoalState &state, const lookfor_target_action::LookforTargetResultConstPtr &result)
     {
         if (result->success)
         {
@@ -39,12 +39,12 @@ namespace FOLLOWING
         ROS_INFO("Action started");
     }
 
-    void LookforTargetClient::FeedbackCB(const lookfor_target_action::LookforTargetActionFeedbackConstPtr &feedback)
+    void LookforTargetClient::FeedbackCB(const lookfor_target_action::LookforTargetFeedbackConstPtr &feedback)
     {
         ROS_INFO("Current yaw: %f", feedback->current_yaw);
     }
 
-    void LookforTargetClient::SendGoal(const lookfor_target_action::LookforTargetActionGoal &goal)
+    void LookforTargetClient::SendGoal(const lookfor_target_action::LookforTargetGoal &goal)
     {
         ac_.sendGoal(goal,
                      boost::bind(&LookforTargetClient::DoneCB, this, _1, _2),
@@ -69,7 +69,8 @@ namespace FOLLOWING
 
     bool LookforTargetClient::IsActive() const
     {
-        return ac_.getState().isActive();
+        std::string state_string = ac_.getState().toString();
+        return state_string == "ACTIVE";
     }
 
     bool LookforTargetClient::IsServerConnected() const

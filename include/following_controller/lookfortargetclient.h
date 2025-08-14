@@ -26,16 +26,16 @@ namespace FOLLOWING
 
         bool is_looking_for_target_;
 
-        void DoneCB(const actionlib::SimpleClientGoalState &state, const lookfor_target_action::LookforTargetActionResultConstPtr &result);
+        void DoneCB(const actionlib::SimpleClientGoalState &state, const lookfor_target_action::LookforTargetResultConstPtr &result);
         void ActiveCB();
-        void FeedbackCB(const lookfor_target_action::LookforTargetActionFeedbackConstPtr &feedback);
+        void FeedbackCB(const lookfor_target_action::LookforTargetFeedbackConstPtr &feedback);
 
     public:
         LookforTargetClient(ros::NodeHandle &nh, const std::string &action_name);
 
         ~LookforTargetClient();
 
-        void SendGoal(const lookfor_target_action::LookforTargetActionGoal &goal);
+        void SendGoal(const lookfor_target_action::LookforTargetGoal &goal);
         void CancelGoal();
         bool IsActive() const;
         bool IsServerConnected() const;

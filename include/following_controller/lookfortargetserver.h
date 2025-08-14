@@ -28,8 +28,8 @@ namespace FOLLOWING
         tf2_ros::TransformListener tfListener_;
 
         std::string action_name_;
-        lookfor_target_action::LookforTargetActionFeedback feedback_;
-        lookfor_target_action::LookforTargetActionResult result_;
+        lookfor_target_action::LookforTargetFeedback feedback_;
+        lookfor_target_action::LookforTargetResult result_;
 
         float current_angle_;
         bool is_active_;
@@ -37,7 +37,7 @@ namespace FOLLOWING
 
         std::unique_ptr<PID_controller> rot_pid_controller_ptr_;
 
-        void ExecuteCB(const lookfor_target_action::LookforTargetActionGoalConstPtr &goal);
+        void ExecuteCB(const lookfor_target_action::LookforTargetGoalConstPtr &goal);
         void PublishFeedback(double current_yaw);
 
     public:
