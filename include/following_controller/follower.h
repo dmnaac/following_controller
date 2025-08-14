@@ -1,9 +1,7 @@
 #ifndef FOLLOWING_CONTROLLER_FOLLOWER_H
 #define FOLLOWING_CONTROLLER_FOLLOWER_H
 
-#include "following_controller/lookfortargetclient.h"
-#include "following_controller/lookfortargetserver.h"
-
+#include <mutex>
 #include <memory>
 #include <ros/ros.h>
 #include <tf2_ros/transform_listener.h>
@@ -22,9 +20,10 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
-#include <mutex>
 #include <spencer_tracking_msgs/TargetPerson.h>
 
+#include "following_controller/lookfortargetclient.h"
+#include "following_controller/lookfortargetserver.h"
 #include "following_controller/pid_controller.h"
 #include "following_controller/state.h"
 #include "following_controller/utils.h"
