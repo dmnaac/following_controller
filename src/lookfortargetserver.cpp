@@ -23,20 +23,24 @@ namespace FOLLOWING
 
     void LookforTargetServer::ExecuteCB(const lookfor_target_action::LookforTargetGoalConstPtr &goal)
     {
-        ROS_INFO("Start lookfor_target_action");
+        ROS_INFO("Start execution");
         bool state = true; // true: anticlockwise, false: clockwise
         bool success = false;
         int progress = 0;
         is_active_ = true;
         ros::Rate rate(10);
         double initialYaw = 0.0;
-        double theta = goal->angle / 2.0;
+
+        double theta_rad = FOLLOWING::rad2deg(goal->angle / 2.0);
+        int step_num = ceil(theta_rad / 0.02);
+        int step_cnt = 0;
 
         geometry_msgs::TransformStamped transformStamped;
         try
         {
             transformStamped = tfBuffer_.lookupTransform("map", "base_link", ros::Time(0));
             initialYaw = tf2::getYaw(transformStamped.transform.rotation);
+            ROS_INFO_STREAM("Initial yaw: " << initialYaw);
         }
         catch (const std::exception &ex)
         {
@@ -50,7 +54,7 @@ namespace FOLLOWING
 
         while (ros::ok() && is_active_ && progress < 3)
         {
-            transformStamped = tfBuffer_.lookupTransform("map", "base_link", ros::Time(0));
+            // transformStamped = tfBuffer_.lookupTransform("map", "base_link", ros::Time(0));
 
             if (as_.isPreemptRequested() || !ros::ok())
             {
@@ -64,17 +68,35 @@ namespace FOLLOWING
 
             if (state)
             {
-                double currentYaw = tf2::getYaw(transformStamped.transform.rotation);
-                // PublishFeedback(currentYaw);
-                double rot = FOLLOWING::rad2deg(currentYaw - initialYaw);
-                double therr = theta - rot;
-                if (!FOLLOWING::IsDoubleEqualtoZero(therr, 0.1))
+                // double currentYaw = tf2::getYaw(transformStamped.transform.rotation);
+                // // PublishFeedback(currentYaw);
+                // ROS_INFO_STREAM("Current yaw: " << currentYaw);
+                // double rot = FOLLOWING::rad2deg(currentYaw - initialYaw);
+                // double therr = FOLLOWING::deg2rad(theta - rot);
+                // if (!FOLLOWING::IsDoubleEqualtoZero(therr, 0.1))
+                // {
+                //     double w = rot_pid_controller_ptr_->calc_output(-therr, control_dt_) * 2.5;
+                //     double velYaw = w / 2.0;
+                //     geometry_msgs::Twist vel;
+                //     vel.angular.z = velYaw;
+                //     cmdVelPub_.publish(vel);
+                // }
+                // else
+                // {
+                //     geometry_msgs::Twist vel;
+                //     vel.angular.z = 0.0;
+                //     cmdVelPub_.publish(vel);
+                //     state = false;
+                //     initialYaw = currentYaw;
+                //     progress++;
+                // }
+
+                if (step_cnt != step_num)
                 {
-                    double w = rot_pid_controller_ptr_->calc_output(-therr, control_dt_) * 2.5;
-                    double velYaw = w / 2.0;
                     geometry_msgs::Twist vel;
-                    vel.angular.z = velYaw;
+                    vel.angular.z = 0.2;
                     cmdVelPub_.publish(vel);
+                    step_cnt++;
                 }
                 else
                 {
@@ -82,23 +104,40 @@ namespace FOLLOWING
                     vel.angular.z = 0.0;
                     cmdVelPub_.publish(vel);
                     state = false;
-                    initialYaw = currentYaw;
+                    step_cnt = 0;
                     progress++;
                 }
             }
             else
             {
-                double currentYaw = tf2::getYaw(transformStamped.transform.rotation);
-                // PublishFeedback(currentYaw);
-                double rot = FOLLOWING::rad2deg(currentYaw - initialYaw);
-                double therr = rot - goal->angle;
-                if (!FOLLOWING::IsDoubleEqualtoZero(therr, 0.1))
+                // double currentYaw = tf2::getYaw(transformStamped.transform.rotation);
+                // // PublishFeedback(currentYaw);
+                // double rot = FOLLOWING::rad2deg(currentYaw - initialYaw);
+                // double therr = FOLLOWING::deg2rad(rot - goal->angle);
+                // if (!FOLLOWING::IsDoubleEqualtoZero(therr, 0.1))
+                // {
+                //     double w = rot_pid_controller_ptr_->calc_output(-therr, control_dt_) * 2.5;
+                //     double velYaw = w / 2.0;
+                //     geometry_msgs::Twist vel;
+                //     vel.angular.z = velYaw;
+                //     cmdVelPub_.publish(vel);
+                // }
+                // else
+                // {
+                //     geometry_msgs::Twist vel;
+                //     vel.angular.z = 0.0;
+                //     cmdVelPub_.publish(vel);
+                //     state = true;
+                //     initialYaw = currentYaw;
+                //     progress++;
+                // }
+
+                if (step_cnt != 2 * step_num)
                 {
-                    double w = rot_pid_controller_ptr_->calc_output(-therr, control_dt_) * 2.5;
-                    double velYaw = w / 2.0;
                     geometry_msgs::Twist vel;
-                    vel.angular.z = velYaw;
+                    vel.angular.z = -0.2;
                     cmdVelPub_.publish(vel);
+                    step_cnt++;
                 }
                 else
                 {
@@ -106,7 +145,7 @@ namespace FOLLOWING
                     vel.angular.z = 0.0;
                     cmdVelPub_.publish(vel);
                     state = true;
-                    initialYaw = currentYaw;
+                    step_cnt = 0;
                     progress++;
                 }
             }

@@ -355,7 +355,7 @@ namespace FOLLOWING
             {
                 ROS_INFO("Start lookfor_target_action");
                 lookfor_target_action::LookforTargetGoal goal;
-                goal.angle = 30.0;
+                goal.angle = 60.0;
                 lookfor_target_client_ptr_->SendGoal(goal);
                 has_tried_lookfor_target_ = true;
             }
