@@ -79,4 +79,20 @@ namespace FOLLOWING
     {
         return deg * M_PI / 180.0;
     }
+
+    double NormalizeAngle(double angle)
+    {
+        angle = fmod(angle, 2 * M_PI);
+
+        if (angle > M_PI)
+        {
+            angle -= 2 * M_PI;
+        }
+        else if (angle < -M_PI)
+        {
+            angle += 2 * M_PI;
+        }
+
+        return angle;
+    }
 }

@@ -15,6 +15,7 @@ namespace FOLLOWING
     bool IsKeyTarget(geometry_msgs::Point last_target_pos, geometry_msgs::Point cur_target_pos);
     double rad2deg(double rad);
     double deg2rad(double deg);
+    double NormalizeAngle(double angle);
 }
 
 #endif // UTILS_H
