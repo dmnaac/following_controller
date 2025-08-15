@@ -350,12 +350,12 @@ namespace FOLLOWING
 
         if (FOLLOWING::IsDoubleEqualtoZero(target_msg.pose.pose.position.x))
         {
-            ROS_WARN_STREAM("No target is found!");
+            ROS_WARN_THROTTLE(1.0, "No target is found!");
             if (!lookfor_target_client_ptr_->GetState() && !has_tried_lookfor_target_)
             {
                 ROS_INFO("Start lookfor_target_action");
                 lookfor_target_action::LookforTargetGoal goal;
-                goal.angle = 60.0;
+                goal.angle = 90.0;
                 lookfor_target_client_ptr_->SendGoal(goal);
                 has_tried_lookfor_target_ = true;
             }

@@ -25,7 +25,6 @@ namespace FOLLOWING
         ros::NodeHandle nh_;
         actionlib::SimpleActionServer<lookfor_target_action::LookforTargetAction> as_;
         ros::Publisher cmdVelPub_;
-        ros::Subscriber imuSub_;
         tf2_ros::Buffer tfBuffer_;
         tf2_ros::TransformListener tfListener_;
 
@@ -37,7 +36,6 @@ namespace FOLLOWING
         bool is_active_;
         double control_dt_;
 
-        std::mutex yaw_mutex_;
         double current_yaw_;
         double start_yaw_;
         double angle_tolerance_;
@@ -46,7 +44,6 @@ namespace FOLLOWING
 
         void ExecuteCB(const lookfor_target_action::LookforTargetGoalConstPtr &goal);
         void PublishFeedback(double current_yaw);
-        void ImuCallback(const sensor_msgs::Imu::ConstPtr &msg);
         bool RotationControl(double angle);
 
     public:

@@ -54,12 +54,15 @@ namespace FOLLOWING
         const double derivative = (bounded_error - err_last_) / dt_;
 
         err_int_ += bounded_error * dt_;
-        err_int_ = std::clamp(err_int_, min_err_int_, max_err_int_);
+        // err_int_ = std::clamp(err_int_, min_err_int_, max_err_int_);
 
         const double p_term = kp_ * bounded_error;
         const double i_term = ki_ * err_int_;
         const double d_term = kd_ * derivative;
         double output = p_term + i_term + d_term;
+
+        ROS_INFO_STREAM("kP: " << kp_ << " kI: " << ki_ << " kD: " << kd_);
+        ROS_INFO_STREAM("P: " << p_term << " I: " << i_term << " D: " << d_term);
 
         output = std::clamp(output, min_pid_out_, max_pid_out_);
 
