@@ -75,6 +75,8 @@ namespace FOLLOWING
         double kP_angular_vel_;
         double kI_angular_vel_;
         double kD_angular_vel_;
+        double distance_tolerance_;
+        double angle_tolerance_;
 
         tf2_ros::Buffer tf_buffer_;
         tf2_ros::TransformListener tf_listener_;

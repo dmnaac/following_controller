@@ -108,25 +108,42 @@ namespace FOLLOWING
         double ry = 0.0;
         double th_err = std::atan2(py, px);
         double p_err = px - rx;
+
         double dt = (curr_pid_time_ - last_pid_time_).toSec();
         control_dt_ = dt > 0.1 ? 0.1 : dt;
-        double w = th_pid_controller_ptr_->calc_output(-th_err, control_dt_) * scale_vel_yaw_;
+        double w = th_pid_controller_ptr_->calc_output(-th_err, control_dt_);
         double v = xy_pid_controller_ptr_->calc_output(-p_err, control_dt_) * scale_vel_x_;
-        double vx = 0.0;
-        double vyaw = w / 2.0;
 
-        const double angle_threshold = M_PI / 4.0;
-        if (std::fabs(th_err) < angle_threshold)
+        double vx;
+        if (std::fabs(p_err) < distance_tolerance_)
         {
-            double min_vel_x = enable_back_ ? -max_vel_x_ : 0.0;
-            vx = std::clamp(v, min_vel_x, max_vel_x_);
-
-            pid_vel_.linear.x = vx;
-            pid_vel_.angular.z = vyaw;
+            vx = 0.0;
         }
         else
         {
-            ROS_INFO_STREAM("Rotation too big");
+            double min_vel_x = enable_back_ ? -max_vel_x_ : 0.0;
+            vx = std::clamp(v, min_vel_x, max_vel_x_);
+        }
+
+        double vw;
+        const double angle_threshold = M_PI / 4.0;
+        if (std::fabs(th_err) < angle_threshold)
+        {
+            if (std::fabs(th_err) < angle_tolerance_)
+            {
+                vw = 0.0;
+            }
+            else
+            {
+                vw = w;
+            }
+
+            pid_vel_.linear.x = vx;
+            pid_vel_.angular.z = vw;
+        }
+        else
+        {
+            ROS_INFO_STREAM("Rotation too big. Target position is wrong!");
         }
     }
 

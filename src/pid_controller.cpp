@@ -81,10 +81,6 @@ namespace FOLLOWING
         err_last_ = bounded_error;
         pid_out_ = output;
 
-        // Optional: Output PID parameters and terms for debugging
-        // ROS_INFO_STREAM("kP: " << kp_ << " kI: " << ki_ << " kD: " << kd_);
-        // ROS_INFO_STREAM("P_term: " << p_term << " I_term: " << i_term << " D_term: " << d_term);
-
         return output;
     }
 }

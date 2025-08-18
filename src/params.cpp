@@ -28,6 +28,8 @@ namespace FOLLOWING
         local_nh_.param<double>("KP_ANGULAR_VEL", kP_angular_vel_, 1.0);
         local_nh_.param<double>("KI_ANGULAR_VEL", kI_angular_vel_, 0.5);
         local_nh_.param<double>("KD_ANGULAR_VEL", kD_angular_vel_, 0.2);
+        local_nh_.param<double>("DISTANCE_TOLERANCE", distance_tolerance_, 0.1);
+        local_nh_.param<double>("ANGLE_TOLERANCE", angle_tolerance_, 0.08);
 
         XmlRpc::XmlRpcValue footprint_xmlrpc;
         if (!local_nh_.getParam("FOOTPRINT", footprint_xmlrpc))

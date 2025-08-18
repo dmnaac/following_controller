@@ -4,6 +4,10 @@
 # Distance to the tracked person
 DISTANCE: 2.0
 
+# Distance and Angle Tolerance [m], [rad]
+DISTANCE_TOLERANCE: 0.1
+ANGLE_TOLERANCE: 0.08
+
 # Enable back movement
 ENABLE_BACK: False
 
