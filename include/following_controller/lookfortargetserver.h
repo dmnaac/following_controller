@@ -40,6 +40,10 @@ namespace FOLLOWING
         double start_yaw_;
         double angle_tolerance_;
 
+        double kp_;
+        double ki_;
+        double kd_;
+
         std::unique_ptr<PID_controller> rot_pid_controller_ptr_;
 
         void ExecuteCB(const lookfor_target_action::LookforTargetGoalConstPtr &goal);
@@ -47,7 +51,7 @@ namespace FOLLOWING
         bool RotationControl(double angle);
 
     public:
-        LookforTargetServer(ros::NodeHandle &nh, const std::string &action_name);
+        LookforTargetServer(ros::NodeHandle &nh, const std::string &action_name, double KP, double KI, double KD);
         ~LookforTargetServer();
     };
 }

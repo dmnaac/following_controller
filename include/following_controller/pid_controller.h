@@ -26,10 +26,10 @@ namespace FOLLOWING
         double deadband_;
 
     public:
-        PID_controller(double kp, double ki, double kd, double deadband, double min_pid_out, double max_pid_out, double min_err_int, double max_err_int, double dt = 0.1);
+        PID_controller(double kp, double ki, double kd, double deadband, double min_pid_out, double max_pid_out, double min_err_int, double max_err_int, double dt = 0.1, std::string controller_name = "Controller");
         ~PID_controller();
 
-        double calc_output(double pos_x, double dt);
+        double calc_output(double input, double dt);
     };
 }
 

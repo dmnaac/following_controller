@@ -13,6 +13,11 @@ SIM_TIME_SAMPLES: 10
 MAX_LINEAR_VEL: 0.2
 MAX_ANGULAR_VEL: 0.5
 
+# PID Parameters
+KP: 0.25
+KI: 0.0
+KD: 0.0
+
 # Scan angle resolution
 SCAN_ANGLE_RESOLUTION: 0.087
 

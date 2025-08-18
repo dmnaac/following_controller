@@ -18,6 +18,10 @@ namespace FOLLOWING
         local_nh_.param<double>("PREDICT_TIME", predict_time_, 2.0);
         local_nh_.param<bool>("ENABLE_BACK", enable_back_, true);
 
+        local_nh_.param<double>("KP", kP_, 0.25);
+        local_nh_.param<double>("KI", kI_, 0.0);
+        local_nh_.param<double>("KD", kD_, 0.0);
+
         XmlRpc::XmlRpcValue footprint_xmlrpc;
         if (!local_nh_.getParam("FOOTPRINT", footprint_xmlrpc))
         {

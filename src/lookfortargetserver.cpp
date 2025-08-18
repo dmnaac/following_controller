@@ -2,12 +2,17 @@
 
 namespace FOLLOWING
 {
-    LookforTargetServer::LookforTargetServer(ros::NodeHandle &nh, const std::string &action_name) : nh_(nh), as_(nh, action_name, boost::bind(&LookforTargetServer::ExecuteCB, this, _1), false), tfListener_(tfBuffer_), action_name_(action_name), is_active_(false), current_yaw_(0.0), start_yaw_(0.0), angle_tolerance_(0.08)
+    LookforTargetServer::LookforTargetServer(ros::NodeHandle &nh, const std::string &action_name,
+                                             double KP, double KI, double KD) :
+        nh_(nh), as_(nh, action_name, boost::bind(&LookforTargetServer::ExecuteCB, this, _1), false), 
+        tfListener_(tfBuffer_), action_name_(action_name), is_active_(false), 
+        current_yaw_(0.0), start_yaw_(0.0), angle_tolerance_(0.08),
+        kp_(KP), ki_(KI), kd_(KD)
     {
         cmdVelPub_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel_x", 10);
         double rate = 10;
         double control_dt_ = 1.0 / rate;
-        rot_pid_controller_ptr_ = std::make_unique<PID_controller>(0.25, 0.0, 0.0, 0.0, -0.2, 0.2, -1.0, 1.0, control_dt_);
+        rot_pid_controller_ptr_ = std::make_unique<PID_controller>(kp_, ki_, kd_, 0.0, -0.2, 0.2, -1.0, 1.0, control_dt_, "Rotation");
 
         as_.start();
         ROS_INFO("Action server starts: %s", action_name.c_str());
@@ -32,7 +37,9 @@ namespace FOLLOWING
         ROS_INFO_STREAM("Angle: " << goal->angle);
 
         bool step1_success = RotationControl(theta_rad);
+        // ros::Duration(1.0).sleep();
         // bool step2_success = RotationControl(-2.0 * theta_rad);
+        // ros::Duration(1.0).sleep();
         // bool step3_success = RotationControl(theta_rad);
 
         if (step1_success)

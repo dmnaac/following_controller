@@ -66,6 +66,9 @@ namespace FOLLOWING
         double predict_time_;
         ros::Time last_pid_time_;
         ros::Time curr_pid_time_;
+        double kP_;
+        double kI_;
+        double kD_;
 
         tf2_ros::Buffer tf_buffer_;
         tf2_ros::TransformListener tf_listener_;
