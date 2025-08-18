@@ -18,8 +18,9 @@ namespace FOLLOWING
         xy_pid_controller_ptr_ = std::make_unique<PID_controller>(kP_linear_vel_, kI_linear_vel_, kD_linear_vel_, 0.0, -max_vel_x_, max_vel_x_, -0.1, 0.1, control_dt_, "Linear velocity");
         th_pid_controller_ptr_ = std::make_unique<PID_controller>(kP_angular_vel_, kI_angular_vel_, kD_angular_vel_, 0.0, -max_vel_yaw_, max_vel_yaw_, -0.2, 0.2, control_dt_, "Angular velocity");
 
-        lookfor_target_client_ptr_ = std::make_unique<LookforTargetClient>(nh_, "lookfor_target_action");
         lookfor_target_server_ptr_ = std::make_unique<LookforTargetServer>(nh_, "lookfor_target_action", kP_, kI_, kD_);
+        ros::Duration(2).sleep();
+        lookfor_target_client_ptr_ = std::make_unique<LookforTargetClient>(nh_, "lookfor_target_action");
 
         Init();
         ROS_INFO_STREAM("Following controller is ready!");
