@@ -2,12 +2,7 @@
 
 namespace FOLLOWING
 {
-    LookforTargetServer::LookforTargetServer(ros::NodeHandle &nh, const std::string &action_name,
-                                             double KP, double KI, double KD) :
-        nh_(nh), as_(nh, action_name, boost::bind(&LookforTargetServer::ExecuteCB, this, _1), false), 
-        tfListener_(tfBuffer_), action_name_(action_name), is_active_(false), 
-        current_yaw_(0.0), start_yaw_(0.0), angle_tolerance_(0.08),
-        kp_(KP), ki_(KI), kd_(KD)
+    LookforTargetServer::LookforTargetServer(ros::NodeHandle &nh, const std::string &action_name, double KP, double KI, double KD) : nh_(nh), as_(nh, action_name, boost::bind(&LookforTargetServer::ExecuteCB, this, _1), false), tfListener_(tfBuffer_), action_name_(action_name), is_active_(false), current_yaw_(0.0), start_yaw_(0.0), angle_tolerance_(0.08), kp_(KP), ki_(KI), kd_(KD)
     {
         cmdVelPub_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel_x", 10);
         double rate = 10;
@@ -115,7 +110,7 @@ namespace FOLLOWING
                 break;
             }
 
-            double w = rot_pid_controller_ptr_->calc_output(-error, control_dt_);
+            double w = rot_pid_controller_ptr_->calc_output(-error, 0.1);
             double velYaw = w * 1.25;
             vel.linear.x = 0.0;
             vel.angular.z = w;
