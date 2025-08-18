@@ -14,7 +14,7 @@ ENABLE_BACK: False
 # Simulation Parameters
 PREDICT_TIME: 3.0
 SIM_TIME_SAMPLES: 10
-MAX_LINEAR_VEL: 0.2
+MAX_LINEAR_VEL: 0.3
 MAX_ANGULAR_VEL: 0.5
 
 # PID Parameters for Rotation
@@ -28,8 +28,8 @@ KI_LINEAR_VEL: 0.0
 KD_LINEAR_VEL: 0.1
 
 # PID Parameters for Angular Velocity
-KP_ANGULAR_VEL: 1.0
-KI_ANGULAR_VEL: 0.5
+KP_ANGULAR_VEL: 0.25
+KI_ANGULAR_VEL: 0.6
 KD_ANGULAR_VEL: 0.2
 
 # Scan angle resolution
