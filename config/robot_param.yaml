@@ -15,8 +15,18 @@ MAX_ANGULAR_VEL: 0.5
 
 # PID Parameters for Rotation
 KP: 0.25
-KI: 0.0
-KD: 0.0
+KI: 0.5
+KD: 0.1
+
+# PID Parameters for Linear Velocity
+KP_LINEAR_VEL: 0.3
+KI_LINEAR_VEL: 0.0
+KD_LINEAR_VEL: 0.1
+
+# PID Parameters for Angular Velocity
+KP_ANGULAR_VEL: 1.0
+KI_ANGULAR_VEL: 0.5
+KD_ANGULAR_VEL: 0.2
 
 # Scan angle resolution
 SCAN_ANGLE_RESOLUTION: 0.087

@@ -23,21 +23,21 @@ namespace FOLLOWING
 
     void LookforTargetServer::ExecuteCB(const lookfor_target_action::LookforTargetGoalConstPtr &goal)
     {
-        ROS_INFO("Start execution");
+        ROS_INFO("Wait 5 seconds and start execution");
+        ros::Duration(5.0).sleep();
 
         bool success = false;
         is_active_ = true;
 
         double theta_rad = FOLLOWING::deg2rad(goal->angle / 2.0);
-        ROS_INFO_STREAM("Angle: " << goal->angle);
 
         bool step1_success = RotationControl(theta_rad);
-        // ros::Duration(1.0).sleep();
-        // bool step2_success = RotationControl(-2.0 * theta_rad);
-        // ros::Duration(1.0).sleep();
-        // bool step3_success = RotationControl(theta_rad);
+        ros::Duration(2.0).sleep();
+        bool step2_success = RotationControl(-2.0 * theta_rad);
+        ros::Duration(2.0).sleep();
+        bool step3_success = RotationControl(theta_rad);
 
-        if (step1_success)
+        if (step1_success && step2_success && step3_success)
         {
             result_.success = true;
             result_.message = "lookfor_target_action completed";
@@ -63,7 +63,6 @@ namespace FOLLOWING
         {
             transformStamped = tfBuffer_.lookupTransform("map", "base_link", ros::Time(0));
             start_yaw_ = tf2::getYaw(transformStamped.transform.rotation);
-            // ROS_INFO_STREAM("Start yaw: " << start_yaw_);
         }
         catch (const std::exception &ex)
         {
@@ -100,8 +99,6 @@ namespace FOLLOWING
 
             // PublishFeedback(currentYaw);
 
-            ROS_INFO_STREAM("Error: " << error);
-
             if (fabs(error) < angle_tolerance_)
             {
                 vel.linear.x = 0.0;
@@ -111,7 +108,6 @@ namespace FOLLOWING
             }
 
             double w = rot_pid_controller_ptr_->calc_output(-error, 0.1);
-            double velYaw = w * 1.25;
             vel.linear.x = 0.0;
             vel.angular.z = w;
             cmdVelPub_.publish(vel);

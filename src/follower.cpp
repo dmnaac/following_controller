@@ -4,10 +4,9 @@
 
 namespace FOLLOWING
 {
-    Follower::Follower(ros::NodeHandle nh) : 
-        nh_(nh), local_nh_("~"), tf_listener_(tf_buffer_), 
-        laserSub_(nh_, "scan_master", 100), odomSub_(nh_, "/odom", 100), targetSub_(nh_, "/mono_following/target", 100), 
-        is_navigating_(false), has_tried_lookfor_target_(false), scale_vel_x_(2.0), scale_vel_yaw_(2.5), ac_("move_base", true)
+    Follower::Follower(ros::NodeHandle nh) : nh_(nh), local_nh_("~"), tf_listener_(tf_buffer_),
+                                             laserSub_(nh_, "scan_master", 100), odomSub_(nh_, "/odom", 100), targetSub_(nh_, "/mono_following/target", 100),
+                                             is_navigating_(false), has_tried_lookfor_target_(false), scale_vel_x_(2.0), scale_vel_yaw_(2.5), ac_("move_base", true)
     {
         load_params();
         cmdVelPub_ = nh_.advertise<geometry_msgs::Twist>("/cmd_vel_x", 1);
@@ -16,8 +15,8 @@ namespace FOLLOWING
 
         double rate = 10;
         double control_dt_ = 1.0 / rate;
-        xy_pid_controller_ptr_ = std::make_unique<PID_controller>(0.3, 0.0, 0.1, 0.0, -max_vel_x_, max_vel_x_, -0.1, 0.1, control_dt_, "Linear velocity");
-        th_pid_controller_ptr_ = std::make_unique<PID_controller>(1.0, 0.5, 0.2, 0.0, -max_vel_yaw_, max_vel_yaw_, -0.2, 0.2, control_dt_, "Angular velocity");
+        xy_pid_controller_ptr_ = std::make_unique<PID_controller>(kP_linear_vel_, kI_linear_vel_, kD_linear_vel_, 0.0, -max_vel_x_, max_vel_x_, -0.1, 0.1, control_dt_, "Linear velocity");
+        th_pid_controller_ptr_ = std::make_unique<PID_controller>(kP_angular_vel_, kI_angular_vel_, kD_angular_vel_, 0.0, -max_vel_yaw_, max_vel_yaw_, -0.2, 0.2, control_dt_, "Angular velocity");
 
         lookfor_target_client_ptr_ = std::make_unique<LookforTargetClient>(nh_, "lookfor_target_action");
         lookfor_target_server_ptr_ = std::make_unique<LookforTargetServer>(nh_, "lookfor_target_action", kP_, kI_, kD_);

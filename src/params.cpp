@@ -19,8 +19,15 @@ namespace FOLLOWING
         local_nh_.param<bool>("ENABLE_BACK", enable_back_, true);
 
         local_nh_.param<double>("KP", kP_, 0.25);
-        local_nh_.param<double>("KI", kI_, 0.0);
-        local_nh_.param<double>("KD", kD_, 0.0);
+        local_nh_.param<double>("KI", kI_, 0.5);
+        local_nh_.param<double>("KD", kD_, 0.1);
+
+        local_nh_.param<double>("KP_LINEAR_VEL", kP_linear_vel_, 0.3);
+        local_nh_.param<double>("KI_LINEAR_VEL", kI_linear_vel_, 0.0);
+        local_nh_.param<double>("KD_LINEAR_VEL", kD_linear_vel_, 0.1);
+        local_nh_.param<double>("KP_ANGULAR_VEL", kP_angular_vel_, 1.0);
+        local_nh_.param<double>("KI_ANGULAR_VEL", kI_angular_vel_, 0.5);
+        local_nh_.param<double>("KD_ANGULAR_VEL", kD_angular_vel_, 0.2);
 
         XmlRpc::XmlRpcValue footprint_xmlrpc;
         if (!local_nh_.getParam("FOOTPRINT", footprint_xmlrpc))

@@ -69,6 +69,12 @@ namespace FOLLOWING
         double kP_;
         double kI_;
         double kD_;
+        double kP_linear_vel_;
+        double kI_linear_vel_;
+        double kD_linear_vel_;
+        double kP_angular_vel_;
+        double kI_angular_vel_;
+        double kD_angular_vel_;
 
         tf2_ros::Buffer tf_buffer_;
         tf2_ros::TransformListener tf_listener_;
