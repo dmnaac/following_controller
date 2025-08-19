@@ -5,6 +5,10 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Point32.h>
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/Quaternion.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 namespace FOLLOWING
 {
@@ -16,6 +20,7 @@ namespace FOLLOWING
     double rad2deg(double rad);
     double deg2rad(double deg);
     double NormalizeAngle(double angle);
+    geometry_msgs::Quaternion InverseQuaternion(geometry_msgs::Pose pose);
 }
 
 #endif // UTILS_H

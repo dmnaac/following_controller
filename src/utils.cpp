@@ -95,4 +95,18 @@ namespace FOLLOWING
 
         return angle;
     }
+
+    geometry_msgs::Quaternion InverseQuaternion(geometry_msgs::Pose pose)
+    {
+        const geometry_msgs::Quaternion original_msg = pose.orientation;
+
+        tf2::Quaternion original_quat;
+        tf2::fromMsg(original_msg, original_quat);
+
+        tf2::Quaternion inverse_quat(-original_quat.getX(), -original_quat.getY(), -original_quat.getZ(), original_quat.getW());
+        inverse_quat.normalize();
+
+        geometry_msgs::Quaternion orientation = tf2::toMsg(inverse_quat);
+        return orientation;
+    }
 }

@@ -416,12 +416,13 @@ namespace FOLLOWING
         {
             is_navigating_ = true;
             targetInMap_.pose = TransformPoseInBaseToMap(targetInBase_.pose);
+            // geometry_msgs::Quaternion inverse_orientation = FOLLOWING::InverseQuaternion(target_msg.pose.pose);
             move_base_msgs::MoveBaseGoal goal;
             goal.target_pose.header.frame_id = "map";
             goal.target_pose.header.stamp = ros::Time::now();
             goal.target_pose.pose.position.x = targetInMap_.pose.position.x;
             goal.target_pose.pose.position.y = targetInMap_.pose.position.y;
-            goal.target_pose.pose.orientation = target_msg.pose.pose.orientation;
+            goal.target_pose.pose.orientation = targetInMap_.pose.orientation;
 
             if (!ac_.waitForServer(ros::Duration(5.0)))
             {
