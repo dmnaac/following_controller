@@ -3,7 +3,7 @@
       <node name="cartographer_node" pkg="cartographer_ros" type="cartographer_node" args="
                 -configuration_directory $(find following_controller)/config/carto_config
                 -configuration_basename tmrobot_2d.lua" output="screen">
-            <remap from="scan" to="scan_master" />
+            <remap from="scan" to="merged_scan_filtered" />
             <!-- <remap from="points2" to="camera/depth/color/points" /> -->
             <remap from="imu" to="imu" />
             <remap from="odom" to="odom" />

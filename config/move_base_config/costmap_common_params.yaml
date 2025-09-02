@@ -1,6 +1,5 @@
 footprint:
-  [[-0.2800, -0.1600], [-0.2800, 0.1600], [0.1200, 0.1600], [0.1200, -0.1600]]
-  # [[0.1600, 0.1200], [-0.1600, 0.1200], [-0.1600, -0.2800], [0.1600, -0.2800]]
+  [[-0.61, -0.40], [-0.61, 0.40], [0.61, 0.40], [0.61, -0.40]]
 footprint_padding: 0.05
 
 obstacle_layer:
@@ -22,7 +21,7 @@ obstacle_layer:
     {
       data_type: LaserScan,
       sensor_frame: laser,
-      topic: /scan_master,
+      topic: /merged_scan_filtered,
       observation_persistence: 0.0,
       marking: true,
       clearing: true,
