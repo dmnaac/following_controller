@@ -4,6 +4,10 @@
 # Distance to the tracked person
 DISTANCE: 2.0
 
+# Maximum allowable following distance: 
+# beyond this range, the robot ceases to follow the tracked person.
+DISTANCE_MAX: 3.5
+
 # Distance and Angle Tolerance [m], [rad]
 DISTANCE_TOLERANCE: 0.1
 ANGLE_TOLERANCE: 0.08

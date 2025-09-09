@@ -390,7 +390,7 @@ namespace FOLLOWING
             has_tried_lookfor_target_ = false;
         }
 
-        if (target_msg.pose.pose.position.x > 3.5)
+        if (target_msg.pose.pose.position.x > distance_max_)
         {
             ROS_WARN_STREAM("Target is too far away!");
             return;
