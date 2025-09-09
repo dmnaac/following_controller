@@ -9,7 +9,7 @@ namespace FOLLOWING
     void Follower::load_params()
     {
         local_nh_.param<double>("DISTANCE", distance_, 1.0);
-        local_nh_.param<double>("DISTANCE_MAX, distance_max_, 3.5");
+        local_nh_.param<double>("DISTANCE_MAX", distance_max_, 3.5);
         local_nh_.param<double>("SCAN_ANGLE_RESOLUTION", scan_angle_resolution_, 0.087);
         local_nh_.param<double>("FOOTPRINT_PADDING", footprint_padding_, 0.0);
 
