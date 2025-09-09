@@ -25,7 +25,7 @@ Panels:
   - Class: rviz/Time
     Name: Time
     SyncMode: 0
-    SyncSource: LaserScan
+    SyncSource: Image_Raw
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -180,7 +180,7 @@ Visualization Manager:
         Value: 0
     - Class: rviz/Image
       Enabled: true
-      Image Topic: /camera/color/image_raw
+      Image Topic: /cam_F/color/image_raw
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -224,31 +224,6 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        left_front_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        left_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        right_front_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        right_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
@@ -278,7 +253,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.009999999776482582
       Style: Flat Squares
-      Topic: /scan_master
+      Topic: /scan_merged_filtered
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true

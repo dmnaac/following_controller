@@ -5,7 +5,7 @@
 namespace FOLLOWING
 {
     Follower::Follower(ros::NodeHandle nh) : nh_(nh), local_nh_("~"), tf_listener_(tf_buffer_),
-                                             laserSub_(nh_, "merged_scan_filtered", 100), odomSub_(nh_, "/odom", 100), targetSub_(nh_, "/mono_following/target", 100),
+                                             laserSub_(nh_, "scan_merged_filtered", 100), odomSub_(nh_, "/odom", 100), targetSub_(nh_, "/mono_following/target", 100),
                                              is_navigating_(false), has_tried_lookfor_target_(false), scale_vel_x_(2.0), scale_vel_yaw_(2.5), ac_("move_base", true)
     {
         load_params();
