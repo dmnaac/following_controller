@@ -7,7 +7,7 @@ namespace FOLLOWING
         cmdVelPub_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel_x", 10);
         double rate = 10;
         double control_dt_ = 1.0 / rate;
-        rot_pid_controller_ptr_ = std::make_unique<PID_controller>(kp_, ki_, kd_, 0.0, -0.2, 0.2, -1.0, 1.0, control_dt_, "Rotation");
+        rot_pid_controller_ptr_ = std::make_unique<PID_controller>(kp_, ki_, kd_, 0.0, -0.3, 0.3, -1.0, 1.0, control_dt_, "Rotation");
 
         as_.start();
         ROS_INFO("Action server starts: %s", action_name.c_str());

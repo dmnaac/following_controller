@@ -24,13 +24,13 @@ KD: 0.1
 
 # PID Parameters for Linear Velocity
 KP_LINEAR_VEL: 0.3
-KI_LINEAR_VEL: 0.0
-KD_LINEAR_VEL: 0.1
+KI_LINEAR_VEL: 0.1
+KD_LINEAR_VEL: 0.0
 
 # PID Parameters for Angular Velocity
-KP_ANGULAR_VEL: 0.25
+KP_ANGULAR_VEL: 0.3
 KI_ANGULAR_VEL: 0.6
-KD_ANGULAR_VEL: 0.2
+KD_ANGULAR_VEL: 0.3
 
 # Scan angle resolution
 SCAN_ANGLE_RESOLUTION: 0.087
