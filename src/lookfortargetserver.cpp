@@ -4,7 +4,7 @@ namespace FOLLOWING
 {
     LookforTargetServer::LookforTargetServer(ros::NodeHandle &nh, const std::string &action_name, double KP, double KI, double KD) : nh_(nh), as_(nh, action_name, boost::bind(&LookforTargetServer::ExecuteCB, this, _1), false), tfListener_(tfBuffer_), action_name_(action_name), is_active_(false), current_yaw_(0.0), start_yaw_(0.0), angle_tolerance_(0.08), kp_(KP), ki_(KI), kd_(KD)
     {
-        cmdVelPub_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel_nav_raw", 10);
+        cmdVelPub_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 10);
         double rate = 10;
         double control_dt_ = 1.0 / rate;
         rot_pid_controller_ptr_ = std::make_unique<PID_controller>(kp_, ki_, kd_, 0.0, -0.3, 0.3, -1.0, 1.0, control_dt_, "Rotation");

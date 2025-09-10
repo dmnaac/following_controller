@@ -9,7 +9,7 @@ namespace FOLLOWING
                                              is_navigating_(false), has_tried_lookfor_target_(false), scale_vel_x_(2.0), scale_vel_yaw_(2.5), ac_("move_base", true)
     {
         load_params();
-        cmdVelPub_ = nh_.advertise<geometry_msgs::Twist>("/cmd_vel_nav_raw", 1);
+        cmdVelPub_ = nh_.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
         sync_ = std::make_shared<message_filters::Synchronizer<SyncPolicy>>(SyncPolicy(100), laserSub_, targetSub_);
         sync_->registerCallback(std::bind(&Follower::TargetCallback, this, std::placeholders::_1, std::placeholders::_2));
 
